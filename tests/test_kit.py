@@ -195,7 +195,7 @@ class UctanUca(KosTemeli):
         kayit = next((self.kok / "takimlar" / "sistem-insaat" / "kosu").glob("*.md")).read_text(encoding="utf-8")
         self.assertIn("kapsam sapması: bin/kos.py", kayit)
         self.assertNotIn("araç kısıtı", kayit)  # grok araç kısıtı destekler → uyarı satırı yok
-        self.assertIn("motor raporlamıyor", kayit)  # grok maliyet raporlamaz → not düşer
+        self.assertNotIn("motor raporlamıyor", kayit)  # grok maliyet raporlar (total_cost_usd)
 
     def test_sevk_kapsam_disina_yazarsa_red(self):
         kapi.talep("x", self.kok)

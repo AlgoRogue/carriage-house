@@ -31,4 +31,4 @@ def cozumle(stdout):
     if not isinstance(yapisal, dict):
         yapisal = yapisal_coz(metin)
     return sonuc(hata=veri.get("status") != "SUCCESS", tur=veri.get("num_turns") or 1,
-                 metin=metin, yapisal=yapisal)
+                 metin=metin, yapisal=yapisal, oturum=veri.get("conversation_id"))

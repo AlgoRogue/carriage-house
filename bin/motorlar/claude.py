@@ -30,4 +30,4 @@ def cozumle(stdout):
         yapisal = yapisal_coz(metin if isinstance(metin, str) else json.dumps(metin))
     return sonuc(hata=veri.get("is_error"), maliyet=veri.get("total_cost_usd"), tur=veri.get("num_turns"),
                  metin=metin if isinstance(metin, str) else json.dumps(metin, ensure_ascii=False),
-                 yapisal=yapisal)
+                 yapisal=yapisal, oturum=veri.get("session_id"))

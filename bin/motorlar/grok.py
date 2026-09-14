@@ -1,14 +1,16 @@
-"""grok — xAI Grok CLI. json-schema, araç kısıtı (`--tools`) ve tur tavanı destekler; maliyet raporlamaz.
+"""grok — xAI Grok CLI. json-schema, araç kısıtı (`--tools`), tur tavanı ve maliyet (`total_cost_usd`) destekler.
 
-JSON çıktı alanları CLI sürümüne göre değişebilir; `cozumle` toleranslıdır — duman testi (KURULUM.md)
-alan adlarını doğrular.
+Çıktı alanları camelCase (grok 1.0.30 ile doğrulandı): `text`, `structuredOutput`, `stopReason`, `sessionId`,
+`num_turns`, `total_cost_usd`. `cozumle` eski/alternatif adlara da toleranslıdır.
 """
 import json
 
 from ._ortak import bozuk, sonuc, yapisal_coz
 
-YETENEK = {"maliyet_raporlar": False, "arac_kisiti": True, "json_sema": True, "tur_tavani": True}
-METIN_ALANLARI = ("result", "response", "text", "content", "message", "output")
+YETENEK = {"maliyet_raporlar": True, "arac_kisiti": True, "json_sema": True, "tur_tavani": True}
+METIN_ALANLARI = ("text", "result", "response", "content", "message", "output")
+SEMA_KURALI = ("Son cevabın, araç çağırmadan ve açıklama eklemeden, verilen JSON şemasına uyan tek bir JSON "
+               "nesnesi olmalıdır. Araç kullanımı bittikten sonra bu JSON'u yaz.")
 # Takım dosyaları araçları Claude adıyla yazar; grok'un yerleşik adları farklı (oturum kayıtlarından doğrulandı).
 ARAC_ESLEME = {"Read": ["read_file", "list_dir"], "Write": ["write"], "Edit": ["search_replace"],
                "Glob": ["list_dir"], "Grep": ["grep"], "Bash": ["run_terminal_command"],
@@ -40,7 +42,8 @@ def komut(istem, ayarlar):
     if ayarlar.get("maks_tur"):
         komut_.extend(["--max-turns", str(ayarlar["maks_tur"])])
     if ayarlar.get("json_sema"):
-        komut_.extend(["--json-schema", json.dumps(ayarlar["json_sema"], ensure_ascii=False)])
+        komut_.extend(["--json-schema", json.dumps(ayarlar["json_sema"], ensure_ascii=False),
+                       "--rules", SEMA_KURALI])
     return komut_
 
 
@@ -63,8 +66,9 @@ def cozumle(stdout):
         return bozuk(stdout, "grok")
     metin = _metin(veri)
     hata = bool(veri.get("is_error") or veri.get("error")) or str(veri.get("status", "")).lower() in ("error", "failed")
-    yapisal = veri.get("structured_output")
+    yapisal = veri.get("structuredOutput") or veri.get("structured_output")
     if not isinstance(yapisal, dict):
         yapisal = yapisal_coz(metin)
-    return sonuc(hata=hata or not metin, tur=veri.get("num_turns") or veri.get("turns") or 1,
-                 metin=metin, yapisal=yapisal)
+    return sonuc(hata=hata or not metin, maliyet=veri.get("total_cost_usd"),
+                 tur=veri.get("num_turns") or veri.get("turns") or 1, metin=metin, yapisal=yapisal,
+                 oturum=veri.get("sessionId") or veri.get("session_id"))

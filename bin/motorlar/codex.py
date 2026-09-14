@@ -17,7 +17,7 @@ def komut(istem, ayarlar):
 
 
 def cozumle(stdout):
-    tur, metinler, hata, gordu = 0, [], False, False
+    tur, metinler, hata, gordu, oturum = 0, [], False, False, None
     for satir in (stdout or "").splitlines():
         satir = satir.strip()
         if not satir:
@@ -28,7 +28,9 @@ def cozumle(stdout):
             continue
         gordu = True
         tip = olay.get("type")
-        if tip == "turn.completed":
+        if tip == "thread.started":
+            oturum = olay.get("thread_id")
+        elif tip == "turn.completed":
             tur += 1
         elif tip == "item.completed":
             oge = olay.get("item") or {}
@@ -41,4 +43,4 @@ def cozumle(stdout):
     metin = "\n\n".join(metinler)
     # Şema verildiyse son ajan mesajı JSON'dur.
     return sonuc(hata=hata or not metinler, tur=tur or 1, metin=metin,
-                 yapisal=yapisal_coz(metinler[-1]) if metinler else None)
+                 yapisal=yapisal_coz(metinler[-1]) if metinler else None, oturum=oturum)

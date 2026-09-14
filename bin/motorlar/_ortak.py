@@ -2,9 +2,10 @@
 import json
 
 
-def sonuc(hata=False, maliyet=0.0, tur=0, metin="", yapisal=None):
+def sonuc(hata=False, maliyet=0.0, tur=0, metin="", yapisal=None, oturum=None):
+    """Standart motor sonucu. `oturum`: CLI'nin oturum kimliği — koşu sonradan etkileşimli açılabilsin."""
     return {"hata": bool(hata), "maliyet": float(maliyet or 0.0), "tur": int(tur or 0),
-            "metin": str(metin or ""), "yapisal": yapisal}
+            "metin": str(metin or ""), "yapisal": yapisal, "oturum": str(oturum) if oturum else None}
 
 
 def _nesne(parca):

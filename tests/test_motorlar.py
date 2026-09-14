@@ -30,7 +30,7 @@ class OrtakTesti(unittest.TestCase):
             self.assertIn("selam", komut)
             bozuk = modul.cozumle("bu json değil")
             self.assertTrue(bozuk["hata"])
-            self.assertEqual(set(bozuk), {"hata", "maliyet", "tur", "metin", "yapisal"})
+            self.assertEqual(set(bozuk), {"hata", "maliyet", "tur", "metin", "yapisal", "oturum"})
 
     def test_yapisal_coz(self):
         self.assertEqual(motorlar.yapisal_coz('önsöz {"a": 1} sonsöz'), {"a": 1})
@@ -53,8 +53,9 @@ class ClaudeTesti(unittest.TestCase):
         self.assertAlmostEqual(c["maliyet"], 0.42)
         self.assertEqual(c["tur"], 3)
         self.assertEqual(c["yapisal"], {"a": "b"})
-        c2 = motorlar.claude.cozumle(json.dumps({"result": "x", "structured_output": {"a": "z"}}))
+        c2 = motorlar.claude.cozumle(json.dumps({"result": "x", "structured_output": {"a": "z"}, "session_id": "s1"}))
         self.assertEqual(c2["yapisal"], {"a": "z"})
+        self.assertEqual(c2["oturum"], "s1")
 
 
 class AgyTesti(unittest.TestCase):
@@ -79,7 +80,7 @@ class CodexTesti(unittest.TestCase):
         self.assertNotIn("--output-schema", motorlar.codex.komut("x", {**AYAR, "json_sema": SEMA}))
 
     def test_cozumle_jsonl(self):
-        satirlar = [{"type": "turn.started"},
+        satirlar = [{"type": "thread.started", "thread_id": "t9"}, {"type": "turn.started"},
                     {"type": "item.completed", "item": {"type": "agent_message", "text": "düşünüyorum"}},
                     {"type": "turn.completed"},
                     {"type": "item.completed", "item": {"type": "agent_message", "text": '{"a": "son"}'}},
@@ -89,6 +90,7 @@ class CodexTesti(unittest.TestCase):
         self.assertEqual(c["tur"], 2)
         self.assertEqual(c["yapisal"], {"a": "son"})
         self.assertIn("düşünüyorum", c["metin"])
+        self.assertEqual(c["oturum"], "t9")
         self.assertTrue(motorlar.codex.cozumle(json.dumps({"type": "error"}))["hata"])
 
 
@@ -100,6 +102,7 @@ class GrokTesti(unittest.TestCase):
         self.assertEqual(k[k.index("--max-turns") + 1], "40")
         self.assertIn("--disable-web-search", k)
         self.assertIn("--json-schema", k)
+        self.assertIn("--rules", k)
         self.assertEqual(k[k.index("-m") + 1], "grok-4")
         k2 = motorlar.grok.komut("x", {**AYAR, "araclar": ["Read", "WebSearch"]})
         self.assertNotIn("--disable-web-search", k2)
@@ -111,8 +114,11 @@ class GrokTesti(unittest.TestCase):
         self.assertFalse(c["hata"])
         self.assertEqual(c["tur"], 4)
         self.assertEqual(c["yapisal"], {"a": "g"})
-        c2 = motorlar.grok.cozumle(json.dumps({"response": "metin", "structured_output": {"a": "s"}}))
+        c2 = motorlar.grok.cozumle(json.dumps({"text": "metin", "structuredOutput": {"a": "s"},
+                                                "sessionId": "g1", "total_cost_usd": 0.0039}))
         self.assertEqual(c2["yapisal"], {"a": "s"})
+        self.assertEqual(c2["oturum"], "g1")
+        self.assertAlmostEqual(c2["maliyet"], 0.0039)
         self.assertTrue(motorlar.grok.cozumle(json.dumps({"error": "kota"}))["hata"])
         self.assertTrue(motorlar.grok.cozumle("[1]")["hata"])
 

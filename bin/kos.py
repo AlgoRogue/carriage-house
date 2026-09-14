@@ -206,6 +206,12 @@ def _motor_kos(motor, metin, fm, takim, kosu, sema_verisi=None, sema_dosyasi=Non
         return motorlar.sonuc(hata=True, metin="süre tavanı aşıldı")
     except OSError as exc:
         return motorlar.sonuc(hata=True, metin=f"{motor} başlatılamadı: {exc}")
+    # Ham motor çıktısı koşu kaydının yanına: yapısal çıktı gelmezse tanı buradan konur (kosu/ git'e girmez).
+    try:
+        Path(str(kosu) + ".motor.out").write_text(
+            (sonuc.stdout or "") + ("\n\n--- stderr ---\n" + sonuc.stderr if sonuc.stderr else ""), encoding="utf-8")
+    except OSError:
+        pass
     cozum = modul.cozumle(sonuc.stdout)
     if sonuc.returncode != 0 and not cozum["metin"]:
         return {**cozum, "hata": True, "metin": (sonuc.stderr or "")[-2000:]}
@@ -377,6 +383,8 @@ def kos(takim, kuru=False, zorla=False):
             f.write("- maliyet: motor raporlamıyor — günlük USD tavanına girmez\n")
         if not yetenek["arac_kisiti"]:
             f.write("- araç kısıtı: motor desteklemiyor — kapsam diff ile denetlendi\n")
+        if cozum.get("oturum"):
+            f.write(f"- oturum: {motor} {cozum['oturum']}\n")
         if dosya:
             f.write(f"- yapısal çıktı: {_goreli(dosya)} · " + ("geçerli" if not yapisal_hatalar else
                                                                   "GEÇERSİZ: " + "; ".join(yapisal_hatalar)) + "\n")
@@ -398,6 +406,7 @@ def kos(takim, kuru=False, zorla=False):
         sonuc = "tamam"
     gecis = evre_gecisi(takim, cozum, yapisal_hatalar, sapma, evre) if sonuc == "tamam" else None
     ayar.durum_guncelle(takim, {"son_kosu": zaman, "son_sonuc": sonuc, "son_motor": motor,
+                                "son_oturum": cozum.get("oturum"),
                                 "son_sebep": "; ".join(yapisal_hatalar) or None})
     print(f"{takim}: {sonuc} · {motor} · {cozum['maliyet']:.3f} USD · {_goreli(kosu)}"
           + (f" · {gecis}" if gecis else ""))
