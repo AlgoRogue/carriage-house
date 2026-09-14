@@ -3,7 +3,7 @@ name: analitik-okuma-ve-raporlama
 description: Ham izleyici verisini hedefe bağlı okunabilir rapora çevirir: her metrik bir hedefe eşlenir, vanity sayılar ayıklanır, kıyas kendi geçmişine göre yapılır ve her okuma üç karar önerisiyle biter. YouTube analiz takımı rapor yazarken okur.
 kaynak: https://github.com/social-media-skills/skills/blob/main/skills/analytics-and-reporting/SKILL.md (commit 6e30eeb, 2026-07-19)
 lisans: MIT
-uyarlayan: A Şirketi kiti — Selma Şirketi'nden alındı (2026-09-11)
+uyarlayan: A Şirketi (2026-09-11)
 takimlar: [youtube-analiz]
 ---
 

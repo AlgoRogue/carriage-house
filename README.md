@@ -8,9 +8,6 @@ bir ajan iddiaları kaynağına kadar doğrular, zincir devralır, yayına hazı
 
 Bu bir iskelettir, bir ürün değil. Klonla, `.env`'i doldur, kendi takımlarını yaz.
 
-Video: [Selma Şirketi · Bölüm 1 — Üç Ajanı Sıfırdan Kurdum](https://www.youtube.com/@selma.builds)
-<!-- Video yayımlandığında bu satırdaki kanal adresi videonun kendi adresiyle değiştirilecek. -->
-
 ![Üç ajan ve bekçi](docs/4-ajan.png)
 
 ## Üç takım
@@ -152,9 +149,8 @@ python3 -m unittest discover -s tests        # reponun kendi testleri
 | [docs/04-yetenekler.md](docs/04-yetenekler.md) | `skills/` — ne, neden, nasıl bağlanır |
 | [docs/05-yeni-takim.md](docs/05-yeni-takim.md) | Sıfırdan yeni takım açmak |
 | [docs/06-sorun-giderme.md](docs/06-sorun-giderme.md) | Sık çıkan hatalar ve okunacak dosya |
-| [docs/07-video-panolari.md](docs/07-video-panolari.md) | Videoda anlatılan tahta panoları |
 | [docs/ornek-kosu/](docs/ornek-kosu/) | Gerçek bir koşunun kaydı ve çıktısı |
-| [prompts/](prompts/) | Kamera karşısında kullanılan Claude Code prompt'ları, sırayla |
+| [prompts/](prompts/) | Şirketi sıfırdan kurmak için Claude Code'a sırayla verilen prompt'lar (P0–P11) |
 | [ANAYASA.md](ANAYASA.md) · [CLAUDE.md](CLAUDE.md) | Beş madde · projenin kimliği |
 
 ## Lisans

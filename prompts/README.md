@@ -1,16 +1,18 @@
-# Prompt'lar — kamera karşısında, sırayla
+# Prompt'lar — sırayla
 
-Bu klasör, videoda A Şirketi'ni sıfırdan kurarken Claude Code'a verilen prompt'ların tamamıdır.
-Her dosyada prompt metni **kamerada kullanıldığı hâliyle**, tek bir kod bloğunda durur; altında
-beklenen çıktı ve varsa dikkat notu vardır.
+Bu klasör, A Şirketi'ni boş bir klasörden kurmak için Claude Code'a sırayla verilen prompt'ların
+tamamıdır. Her dosyada prompt metni tek bir kod bloğunda durur — kopyala, Claude Code'a yapıştır;
+altında beklenen çıktı ve varsa dikkat notu vardır.
 
-Videodaki başlangıç durumu: `~/a-sirketi` klasörü açıldı, boş. Claude Code o klasörün içinde
-başlatıldı (`cd ~/a-sirketi && claude`). Kod yazdırılmadı — betikler hazırdı (`~/a-sirketi-kit`),
-Claude Code yalnızca kopyaladı ve belge dosyalarını yazdı.
+Başlangıç durumu: `~/a-sirketi` klasörü açıldı, boş. Claude Code o klasörün içinde başlatıldı
+(`cd ~/a-sirketi && claude`). Kod yazdırılmaz — betikler hazırdır; Claude Code yalnızca kopyalar
+ve belge dosyalarını (`CLAUDE.md`, `ANAYASA.md`, `takim.md`) yazar.
 
-> **Repoyu klonladıysan:** kopyalama prompt'ları (P1, P2) sana gerekmez — `bin/`, `skills/`,
-> `sirket/`, `.claude/settings.json`, `tests/` ve `takimlar/_iskelet/` zaten yerinde. Prompt
-> metinlerindeki `~/a-sirketi-kit` yolları kamerada öyle olduğu için olduğu gibi bırakıldı.
+> **`~/a-sirketi-kit` nedir:** bu reponun kendisi. P1 ve P2 betikleri oradan kopyalar; önce
+> `git clone <bu-repo> ~/a-sirketi-kit` yap.
+>
+> **Repoyu doğrudan klonladıysan:** kopyalama prompt'ları (P1, P2) sana gerekmez — `bin/`, `skills/`,
+> `sirket/`, `.claude/settings.json`, `tests/` ve `takimlar/_iskelet/` zaten yerinde.
 
 ## Sıra
 
@@ -29,11 +31,12 @@ Claude Code yalnızca kopyaladı ve belge dosyalarını yazdı.
 | P8 | [P08-gercek-kosu.md](P08-gercek-kosu.md) | gerçek koşu — telefondan link | çalıştır |
 | P9 | [P09-dagitici.md](P09-dagitici.md) | dağıtıcı — zincir | çalıştır |
 | P10 | [P10-github.md](P10-github.md) | commit ve GitHub | kendi kopyan için |
+| P11 | [P11-surekli-calistir.md](P11-surekli-calistir.md) | dinleyici + sabah/akşam zamanlayıcı — döngü sen yokken döner | çalıştır |
 
 ## Prompt yazmak yerine hazır dosyayı almak
 
-Prompt'ların ürettiği her dosyanın son hâli bu repoda duruyor. Takıldığın ya da kamerada zaman
-kaybetmek istemediğin yerde prompt'u atlayıp dosyayı doğrudan alabilirsin:
+Prompt'ların ürettiği her dosyanın son hâli bu repoda duruyor. Takıldığın yerde prompt'u atlayıp
+dosyayı doğrudan alabilirsin:
 
 | Prompt | Hazır dosya |
 |---|---|
@@ -42,8 +45,6 @@ kaybetmek istemediğin yerde prompt'u atlayıp dosyayı doğrudan alabilirsin:
 | P5a · P5b · P5c | [`takimlar/x-icerik/takim.md`](../takimlar/x-icerik/takim.md) · [`youtube-analiz`](../takimlar/youtube-analiz/takim.md) · [`twitter-icerik`](../takimlar/twitter-icerik/takim.md) |
 | P2 (kimlik ve yetenekler) | [`sirket/AJAN-KIMLIGI.md`](../sirket/AJAN-KIMLIGI.md) · [`sirket/YETENEKLER.md`](../sirket/YETENEKLER.md) · [`skills/`](../skills/) |
 
-Videoda kullanılan yedek cümle buydu: "hazır olanı alıyorum". Prompt'u atlamak sistemi bozmaz —
-tek kaynak dosyanın kendisidir, onu nasıl yazdığın değil.
+Prompt'u atlamak sistemi bozmaz — tek kaynak dosyanın kendisidir, onu nasıl yazdığın değil.
 
-Zaman daralırsa atlanabilecek tek takım `youtube-analiz`'dir (P5b): zinciri görmek için
-`x-icerik` + `twitter-icerik` yeter.
+Atlanabilecek tek takım `youtube-analiz`'dir (P5b): zinciri görmek için `x-icerik` + `twitter-icerik` yeter.

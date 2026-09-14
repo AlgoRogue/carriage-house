@@ -3,7 +3,7 @@ name: icerik-denetimi
 description: Yayınlanmış içeriğin geriye dönük sağlık kontrolü: ne tuttu, ne tutmadı, hangi konu başlığı aç kaldı, hangi söz verilip tutulmadı — ve her kalem için tut / bırak / tazele kararı. YouTube analiz takımı periyodik denetimde, CEO raporu çeyrek bakışında okur.
 kaynak: https://github.com/social-media-skills/skills/blob/main/skills/content-audit/SKILL.md (commit 6e30eeb, 2026-07-19)
 lisans: MIT
-uyarlayan: A Şirketi kiti — Selma Şirketi'nden alındı (2026-09-11)
+uyarlayan: A Şirketi (2026-09-11)
 takimlar: [youtube-analiz]
 ---
 

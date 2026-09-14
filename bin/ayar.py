@@ -22,7 +22,7 @@ MESAI_METNI = f"{MESAI_BASLANGIC:02d}:00-{MESAI_BITIS:02d}:00"
 # --- tavanlar (ANAYASA 4) --------------------------------------------------
 KOSU_BUTCESI_USD = 2.0          # tek koşunun para tavanı
 KOSU_SURESI_SN = 15 * 60        # tek koşunun süre tavanı
-KOSULAR_ARASI_DK = 0            # aynı takımın iki koşusu arası — 0: bekleme yok (Selma, 11 Eyl)
+KOSULAR_ARASI_DK = 0            # aynı takımın iki koşusu arası — 0: bekleme yok
 GUNLUK_KOSU_TAVANI = 4          # takım başına gün
 GUNLUK_MALIYET_TAVANI_USD = 10.0  # tüm şirket, gün
 ES_ZAMANLI_TAVAN = 2            # dağıtıcının aynı anda başlattığı takım sayısı

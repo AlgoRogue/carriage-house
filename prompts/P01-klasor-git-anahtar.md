@@ -13,5 +13,4 @@
 **Beklenen çıktı:** `git init` yapılmış bir klasör, ilk satırı `.env` olan bir `.gitignore` ve
 içi boş bir `.env`. `git status` çıktısında `.env` görünmemeli.
 
-**Dikkat:** `.env` kamerada **açılmaz**. Kamerada söylenen: kayıt duraklatılır, anahtarlar elle
-yazılır, kayıt sürdürülür. Ajanın `.env` okuması `CLAUDE.md`'de de `ANAYASA.md` §2'de de yasaktır.
+**Dikkat:** `.env`'i Claude Code'a **açtırma**; değerleri kendi editöründe elle yaz. Ajanın `.env` okuması `CLAUDE.md`'de de `ANAYASA.md` §2'de de yasaktır.

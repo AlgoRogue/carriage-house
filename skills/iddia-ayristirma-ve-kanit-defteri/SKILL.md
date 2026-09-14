@@ -3,7 +3,7 @@ name: iddia-ayristirma-ve-kanit-defteri
 description: Bir metni (tweet, makale, transkript) kontrol edilebilir iddialara ayırır, her iddia için izi sürülebilir bir kanıt defteri tutar ve "kanıt yok" ile "çelişen kanıt var" durumlarını ayırır. x-icerik takımı doğrulama tablosunu doldurmadan önce okur.
 kaynak: https://github.com/petar-nauka/fact-check-skill/blob/main/SKILL.md (commit ebfde09, 2026-06-28)
 lisans: MIT
-uyarlayan: A Şirketi kiti — Selma Şirketi'nden alındı (2026-09-11)
+uyarlayan: A Şirketi (2026-09-11)
 takimlar: [x-icerik]
 ---
 

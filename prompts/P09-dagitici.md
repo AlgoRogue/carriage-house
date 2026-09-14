@@ -12,7 +12,7 @@
 
 **Beklenen çıktı:** Kuru koşuda `x-<id> → twitter-icerik/aci-<id>` satırı; gerçek koşuda
 `twitter-icerik` başlar ve `takimlar/twitter-icerik/cikti/<tarih>-<slug>/article.html` çıkar.
-Kamerada söylenen: tek link atıldı, iki ajan koştu, iki bekçi kararı verildi, bir paket çıktı —
+Sonuç: tek link atıldı, iki ajan koştu, iki bekçi kararı verildi, bir paket çıktı —
 ve hiçbir yere yayınlanmadı.
 
 **Dikkat:** Aynı takımı arka arkaya tetiklersen tavan devreye girebilir: takım başına günde dört

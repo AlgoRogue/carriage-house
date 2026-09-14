@@ -3,7 +3,7 @@ name: kaynak-kimlik-dogrulama
 description: SIFT yöntemiyle bir kaynağın kim olduğunu, materyalin gerçekliğini ve iddiayı gerçekten destekleyip desteklemediğini ayrı ayrı sınar; ekran görüntüsü, video karesi ve yapay üretim şüphesi için doğrulama izi bırakır. x-icerik metni çekemediğinde ya da görsel kanıt geldiğinde okur.
 kaynak: https://github.com/jamditis/claude-skills-journalism/blob/master/journalism-core/skills/source-verification/SKILL.md (commit 2ab11fd, 2026-09-07)
 lisans: MIT
-uyarlayan: A Şirketi kiti — Selma Şirketi'nden alındı (2026-09-11)
+uyarlayan: A Şirketi (2026-09-11)
 takimlar: [x-icerik]
 ---
 

@@ -15,4 +15,4 @@ ardından okuma sırası ve yetenek satırı gelir. `--check` çıkışı 0 olma
 
 **Dikkat:** `takim.md` tek kaynaktır; agent dosyası **üretilir**, elle düzenlenmez. Şirkete özel
 frontmatter alanları (`gerekli_anahtarlar`, `butce_usd`, `skills`) agent frontmatter'ına sızmaz;
-`skills` önsözdeki tek satıra dönüşür. Kamerada bu ilk satır sesli okundu.
+`skills` önsözdeki tek satıra dönüşür.

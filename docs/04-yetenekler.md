@@ -35,7 +35,7 @@ description: Bir X yazısı, makale ya da video transkriptindeki iddiaları tek 
   kaynağa kadar açıp ✅/🟡/⛔ ile sınıflar; … X içerik ve twitter içerik takımları kullanır.
 kaynak: A Şirketi kitinin kendi üretimi — dış kaynak yok
 lisans: —
-uyarlayan: A Şirketi kiti — Selma Şirketi'nden alındı (2026-09-11)
+uyarlayan: A Şirketi (2026-09-11)
 takimlar: [x-icerik, twitter-icerik]
 ---
 ```

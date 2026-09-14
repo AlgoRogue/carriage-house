@@ -1,6 +1,6 @@
 # YETENEKLER — A Şirketi
 
-> Selma Şirketi'nin `sirket/YETENEKLER.md` kataloğundan uyarlandı (üç takımın kullandığı sekiz yetenek).
+> Üç takımın kullandığı sekiz yeteneğin kataloğu.
 > Bir yetenek, o işin nasıl yapılacağını adım adım, şablonuyla ve kontrol listesiyle anlatan tek dosyadır:
 > `skills/<ad>/SKILL.md`. Ajan koşu adımında **yalnızca ilgili yeteneği** okur.
 

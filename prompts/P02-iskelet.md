@@ -18,5 +18,4 @@ Hiçbir dosyanın içeriğini değiştirme.
 kimliğinin üç cümlelik özeti. Hiçbir dosya değişmez.
 
 **Dikkat:** `.claude/agents/` **kopyalanmaz** — ajan dosyaları P6'da `takim.md`'lerden üretilir.
-Kamerada söylenen: betikler önceden yazıldı ve bugün araç olarak kullanılıyor; yetenekler GitHub'dan
-alındı, her dosyada kaynağı ve lisansı yazıyor ([`sirket/YETENEKLER.md`](../sirket/YETENEKLER.md)).
+Betikler hazır araçtır, yazdırılmaz; yetenekler açık kaynaklardan uyarlandı, her dosyada kaynağı ve lisansı yazıyor ([`sirket/YETENEKLER.md`](../sirket/YETENEKLER.md)).

@@ -1,6 +1,5 @@
 # AJAN KİMLİĞİ — A Şirketi'nde kim olduğunu bil
 
-> Selma Şirketi'nin `sirket/AJAN-KIMLIGI.md` dosyasından uyarlandı (üç takıma indirildi).
 > Her takım her koşunun başında bunu okur: `ANAYASA.md` → **bu dosya** → `takimlar/<takim>/kurallar.md` → `takim.md`.
 > Bu dosya insanındır; ajan değiştirmez. Öğrendiğini `defter.md`'ye yazar.
 

@@ -3,7 +3,7 @@ name: zincir-yazimi
 description: X zinciri ve lansman postu yazar: açılış hem kancalar hem ödülü vaat eder, her gönderi bir sonrakini hak eder, kapanış tek çağrıyla biter — ve "bu aslında zincir değil, tek post olmalı" itirazını söyleme izni vardır. Twitter içerik takımı article paketinin lansman postlarını yazarken okur.
 kaynak: https://github.com/social-media-skills/skills/blob/main/skills/thread-writer/SKILL.md (commit 6e30eeb, 2026-07-19)
 lisans: MIT
-uyarlayan: A Şirketi kiti — Selma Şirketi'nden alındı (2026-09-11)
+uyarlayan: A Şirketi (2026-09-11)
 takimlar: [twitter-icerik]
 ---
 

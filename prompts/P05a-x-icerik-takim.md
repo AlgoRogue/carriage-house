@@ -19,5 +19,5 @@ Türkçe yaz, kısa tut, uydurma adım ekleme.
 **Beklenen çıktı:** Frontmatter'ı eksiksiz, yedi adımlı, çıktı sözleşmesi yazılı bir `takim.md`.
 `description` alanı ajanın mesleğidir — P6'da üretilecek ajan dosyasının ilk satırında görünür.
 
-**Dikkat:** Kamerada söylenen: "Bakın — meslek, akan şey, araçlar, yetenekler, adımlar, çıktı.
-Kurallar dosyası ayrı." Claude Code'un yazdığını oku, ekle-çıkar; takılırsan hazır dosyayı kopyala.
+**Dikkat:** Dosyanın iskeleti hep aynıdır — meslek, akan şey, araçlar, yetenekler, adımlar, çıktı;
+kurallar dosyası ayrıdır. Claude Code'un yazdığını oku, ekle-çıkar; takılırsan hazır dosyayı kopyala.

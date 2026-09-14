@@ -3,7 +3,7 @@ name: anlati-kurgusu
 description: Bir işin içindeki gerçek hikâyeyi bulur ve yayı kurar: kurulum/sorun → dönüm noktası → ödül; okuyucuyu kahraman, anlatıcıyı rehber yapar, soyut cümle yerine tek somut ayrıntıya bağlar ve hikâye uydurmayı yasaklar. Twitter içerik takımı article yazarken, video içerik takımı omurga kurarken okur.
 kaynak: https://github.com/social-media-skills/skills/blob/main/skills/storytelling-and-narrative/SKILL.md (commit 6e30eeb, 2026-07-19)
 lisans: MIT
-uyarlayan: A Şirketi kiti — Selma Şirketi'nden alındı (2026-09-11)
+uyarlayan: A Şirketi (2026-09-11)
 takimlar: [twitter-icerik]
 ---
 

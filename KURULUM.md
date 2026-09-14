@@ -74,7 +74,7 @@ Beş madde: yayın düğmesi insanın · kaynaksız sayı yok · bekçi ayrı ka
 defter ajanın, kural insanın. Bu dosya **insanındır**: ajan okur, değiştiremez — `.claude/agents/`
 önsözü her koşuda onu ilk sıraya koyar.
 
-Kendi şirketini kuruyorsan maddeleri kendin yazarsın. Videodaki hâli, kelimesi kelimesine dikte
+Kendi şirketini kuruyorsan maddeleri kendin yazarsın. Buradaki hâli, kelimesi kelimesine dikte
 edilen prompt'la üretildi: [prompts/P03-anayasa.md](prompts/P03-anayasa.md).
 
 ---
@@ -109,8 +109,8 @@ Kendi takımını açmak istersen:
 bin/takim-olustur.sh <yeni-takim>     # iskeletten dört dosya
 ```
 
-Sonra `takim.md`'nin içini doldurursun. Videoda bu üç dosya kamera karşısında Claude Code'a
-yazdırıldı; kullanılan prompt'lar [prompts/P05a-x-icerik-takim.md](prompts/P05a-x-icerik-takim.md),
+Sonra `takim.md`'nin içini doldurursun. Bu üç dosya Claude Code'a yazdırıldı; kullanılan prompt'lar
+[prompts/P05a-x-icerik-takim.md](prompts/P05a-x-icerik-takim.md),
 [P05b](prompts/P05b-youtube-analiz-takim.md), [P05c](prompts/P05c-twitter-icerik-takim.md)
 dosyalarında — kendi takımın için şablon olarak kullanabilirsin.
 
@@ -180,6 +180,7 @@ python3 bin/zamanla.py --durum              # yüklü mü, ne zaman koşacak
 ```
 
 Raporlar `sirket-log/rapor/YYYY-MM-DD-{sabah,aksam}.md` altına yazılır ve dışarı hiçbir şey gitmez.
+Bu adımı Claude Code'a yaptırmak istersen: [prompts/P11-surekli-calistir.md](prompts/P11-surekli-calistir.md).
 Bilgisayar o saatte kapalıysa launchd kaçan işi açılışta koşturur. Kaldırmak: `python3 bin/zamanla.py --kaldir`.
 
 Kendi kopyanı GitHub'a açacaksan, önce `.env` sızmadığından emin ol:
@@ -191,11 +192,12 @@ gh repo create <ad> --public --source=. --push
 
 ---
 
-## Sıfırdan kendin kurmak istersen (videodaki gibi)
+## Sıfırdan kendin kurmak istersen
 
-Videoda bu repo hazır alınmadı: boş bir klasörde, Claude Code'a sırayla on bir prompt verilerek
-kuruldu — `CLAUDE.md`, `ANAYASA.md`, üç `takim.md`, ajan dosyaları, kuru koşu, gerçek koşu, dağıtıcı,
-GitHub. Prompt'ların tamamı kamerada kullanıldığı hâliyle burada:
+Bu repo hazır alınmak zorunda değil: boş bir klasörde, Claude Code'a sırayla on iki prompt vererek
+aynı şirket sıfırdan kurulur — `CLAUDE.md`, `ANAYASA.md`, üç `takim.md`, ajan dosyaları, kuru koşu,
+gerçek koşu, dağıtıcı, GitHub, sürekli çalıştırma. Prompt'ların tamamı, olduğu gibi
+kopyalayıp yapıştırılacak hâlde:
 
 **[prompts/](prompts/)** — sıra tablosu, her prompt ayrı dosyada, beklenen çıktısı ve dikkat notuyla.
 
