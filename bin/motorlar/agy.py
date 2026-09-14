@@ -26,5 +26,9 @@ def cozumle(stdout):
     metin = veri.get("response") or ""
     if not isinstance(metin, str):
         metin = json.dumps(metin, ensure_ascii=False)
+    # --json-schema verildiyse CLI `structured_output` alanını doldurur; yoksa metinden çözülür.
+    yapisal = veri.get("structured_output")
+    if not isinstance(yapisal, dict):
+        yapisal = yapisal_coz(metin)
     return sonuc(hata=veri.get("status") != "SUCCESS", tur=veri.get("num_turns") or 1,
-                 metin=metin, yapisal=yapisal_coz(metin))
+                 metin=metin, yapisal=yapisal)

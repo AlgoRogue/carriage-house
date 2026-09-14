@@ -7,18 +7,28 @@ def sonuc(hata=False, maliyet=0.0, tur=0, metin="", yapisal=None):
             "metin": str(metin or ""), "yapisal": yapisal}
 
 
-def yapisal_coz(metin):
-    """Metnin içindeki ilk JSON nesnesini çözer; yoksa None. Şema zorlamalı motorlarda metin zaten JSON'dur."""
-    if not metin:
-        return None
-    basi, sonu = metin.find("{"), metin.rfind("}")
-    if basi < 0 or sonu <= basi:
-        return None
+def _nesne(parca):
     try:
-        veri = json.loads(metin[basi:sonu + 1])
+        veri = json.loads(parca)
     except ValueError:
         return None
     return veri if isinstance(veri, dict) else None
+
+
+def yapisal_coz(metin):
+    """Metindeki JSON nesnesini çözer; yoksa None. Sıra: tüm metin → satır satır (sondan) → ilk { … son }.
+    Şema zorlamalı motorlarda metin zaten JSON'dur; bazıları birden fazla satır basar."""
+    if not metin:
+        return None
+    if (veri := _nesne(metin.strip())) is not None:
+        return veri
+    for satir in reversed(metin.splitlines()):
+        if (veri := _nesne(satir.strip())) is not None:
+            return veri
+    basi, sonu = metin.find("{"), metin.rfind("}")
+    if basi < 0 or sonu <= basi:
+        return None
+    return _nesne(metin[basi:sonu + 1])
 
 
 def bozuk(stdout, motor):
