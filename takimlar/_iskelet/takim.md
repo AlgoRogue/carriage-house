@@ -1,8 +1,9 @@
 ---
 name: TAKIM
 description: TAKIM takımı — (tek cümle: ne girer, ne çıkar)
-model: sonnet
+motor: claude
 tools: [Read, Write, Glob, Grep]
+cikti_semasi:
 gerekli_anahtarlar: []
 skills: []
 butce_usd: 2
@@ -10,25 +11,26 @@ butce_usd: 2
 
 # TAKIM
 
-## Akan şey
-Girdi: (yol / araç)
-Çıktı: `takimlar/TAKIM/cikti/…`
+## Varoluş amacı
+(tek paragraf)
+
+## Girdi
+- (yol / dosya)
 
 ## Koşu adımları
-1. `durum.json`'daki kuyruğa bak; `bekliyor` madde varsa ondan başla.
-2. Girdi kaynağını oku (aşağıda).
-3. Çıktıyı `takimlar/TAKIM/cikti/` altına tarihli dosya olarak yaz.
-4. `durum.json`'u güncelle: `son_kosu`, kuyruk maddelerinin `durum` alanı, `defter_son_ders`.
+1. `increment/evre.json`'u ve kendi `durum.json`'unu oku.
+2. Girdiyi oku (yukarıda).
+3. Çıktıyı üret (aşağıdaki sözleşmeye göre).
+4. `durum.json`'u güncelle: `son_kosu`, `defter_son_ders`.
 5. `defter.md`'ye bu koşudan çıkan **tek** dersi ekle (ders yoksa ekleme).
-6. Koşu kaydını `SIRKET_KOSU` yoluna yaz: ne okudun, ne ürettin, ne kaldı, hangi kaynaklardan.
+6. Koşu kaydını `SIRKET_KOSU` yoluna yaz: ne okudun, ne ürettin, ne kaldı.
 
-## Yetenekler
-Koşu adımında ilgili dosyayı oku ve uygula. (Yetenek eklediğinde frontmatter'daki `skills:`
-alanına adını yaz ve `skills/<ad>/SKILL.md` dosyasının `takimlar:` alanına bu takımı ekle.)
-- (henüz yetenek yok)
+## Asla yapmaz
+1.
+2.
 
-## Girdi kaynakları
-- (yol / araç)
+## Motor
+`claude` | `agy` | `codex` | `grok` | `sozlesme` (evre.motor.insaat) | `ters` (evre.motor.bekci)
 
 ## Çıktı sözleşmesi
-- (dosya adı deseni ve içinde ne olduğu)
+- (dosya adı deseni ve içinde ne olduğu; `cikti_semasi` doluysa son cevap o şemaya uyan JSON'dur ve sürücü yazar)

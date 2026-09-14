@@ -1,0 +1,41 @@
+{
+  "$comment": "sistem-sevk'in tek çıktısı. Dondurulmuş: yalnız insan değiştirir. Alanlar sentez §3.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["increment_id", "hedef_davranis", "dokunulacak_yollar", "yeni_dosyalar", "motor_adayi",
+               "kabul_kriterleri", "durma_kosulu", "kapsam_disi", "yayin_anlami"],
+  "properties": {
+    "increment_id": {"type": "string", "minLength": 1},
+    "hedef_davranis": {"type": "string", "minLength": 10,
+                       "description": "Gözlenebilir tek davranış: bittiğinde ne çalışıyor olacak?"},
+    "dokunulacak_yollar": {"type": "array", "items": {"type": "string", "minLength": 1},
+                           "description": "Değiştirilmesine izin verilen mevcut dosya/klasör yolları (repo köküne göre)."},
+    "yeni_dosyalar": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "motor_adayi": {"type": "string", "enum": ["codex", "agy", "grok", "claude"],
+                    "description": "İnşaat için öneri; kesinleşmesi Kapı 1'de insanın."},
+    "kabul_kriterleri": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["aciklama", "dogrulama"],
+        "properties": {
+          "aciklama": {"type": "string", "minLength": 1},
+          "dogrulama": {
+            "type": "object", "additionalProperties": false,
+            "required": ["tip", "deger"],
+            "properties": {
+              "tip": {"type": "string", "enum": ["komut", "dosya"],
+                      "description": "komut: çıkış 0 beklenen kabuk komutu · dosya: var olması beklenen yol"},
+              "deger": {"type": "string", "minLength": 1}
+            }
+          }
+        }
+      }
+    },
+    "durma_kosulu": {"type": "string", "minLength": 1,
+                     "description": "İnşaat hangi belirsizlikte durup paketi sevk'e iade eder."},
+    "kapsam_disi": {"type": "array", "items": {"type": "string"}},
+    "yayin_anlami": {"type": "string", "minLength": 1,
+                     "description": "Kapı 2'de hangi dosya SoT olur, hangi davranış canlıya alınır."}
+  }
+}

@@ -12,20 +12,21 @@ from pathlib import Path
 
 KOK = Path(__file__).resolve().parents[1]
 TAKIMLAR = KOK / "takimlar"
+INCREMENT = KOK / "increment"
 ENV_DOSYASI = KOK / ".env"
+MOTORLAR = ("claude", "agy", "codex", "grok")
 
-# --- mesai (ANAYASA 4) -----------------------------------------------------
+# --- mesai — bugün uygulanmıyor (tetik insan); ileride zamanlayıcı increment'i için duruyor ----------
 MESAI_BASLANGIC = 9   # dahil
 MESAI_BITIS = 23      # hariç
 MESAI_METNI = f"{MESAI_BASLANGIC:02d}:00-{MESAI_BITIS:02d}:00"
 
 # --- tavanlar (ANAYASA 4) --------------------------------------------------
-KOSU_BUTCESI_USD = 2.0          # tek koşunun para tavanı
-KOSU_SURESI_SN = 15 * 60        # tek koşunun süre tavanı
-KOSULAR_ARASI_DK = 0            # aynı takımın iki koşusu arası — 0: bekleme yok
-GUNLUK_KOSU_TAVANI = 4          # takım başına gün
-GUNLUK_MALIYET_TAVANI_USD = 10.0  # tüm şirket, gün
-ES_ZAMANLI_TAVAN = 2            # dağıtıcının aynı anda başlattığı takım sayısı
+KOSU_BUTCESI_USD = 2.0          # tek koşunun para tavanı — yalnız maliyet raporlayan motorda (claude) uygulanır
+KOSU_SURESI_SN = 15 * 60        # tek koşunun süre tavanı — her motorda
+KOSU_TUR_TAVANI = 40            # tur tavanı — destekleyen motorda (grok)
+GUNLUK_KOSU_TAVANI = 6          # takım başına gün — her motorda
+GUNLUK_MALIYET_TAVANI_USD = 10.0  # tüm şirket, gün — raporlanan USD toplamı
 
 ENV_SATIRI = re.compile(r"^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$")
 
@@ -62,11 +63,6 @@ def ortam_yukle(yol=None):
 def eksik_anahtarlar(gerekli, ortam=None):
     ortam = ortam if ortam is not None else os.environ
     return [a for a in gerekli if not ortam.get(a)]
-
-
-def kanal():
-    """İzlenecek YouTube kanalı — `.env` içindeki KANAL değeri."""
-    return os.environ.get("KANAL") or "@ornek-kanal"
 
 
 # --- mesai -----------------------------------------------------------------
@@ -139,11 +135,43 @@ def durum_guncelle(takim, yama, kok=None):
     return yeni
 
 
+# --- increment/evre.json (ANAYASA 2: tek aktif increment) -------------------
+
+BOS_EVRE = {"increment_id": None, "evre": "bos", "bekleyen_onay": None,
+            "motor": {"insaat": None, "bekci": None}, "talep": None, "kapsam_sapmasi": [], "gecmis": []}
+
+
+def evre_yolu(kok=None):
+    return Path(kok or KOK) / "increment" / "evre.json"
+
+
+def evre_oku(kok=None):
+    try:
+        return {**BOS_EVRE, **json.loads(evre_yolu(kok).read_text(encoding="utf-8"))}
+    except (OSError, ValueError):
+        return dict(BOS_EVRE)
+
+
+def evre_guncelle(yama, olay, kok=None):
+    """Evreyi yamalar, geçmişe tarihli olay satırı ekler, yazar ve yeni evreyi döner."""
+    eski = evre_oku(kok)
+    yeni = {**eski, **yama, "gecmis": [*eski.get("gecmis", []), {"zaman": simdi_iso(), "olay": olay}]}
+    yol = evre_yolu(kok)
+    yol.parent.mkdir(parents=True, exist_ok=True)
+    yol.write_text(json.dumps(yeni, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return yeni
+
+
+def increment_klasoru(increment_id, kok=None):
+    return Path(kok or KOK) / "increment" / str(increment_id)
+
+
 if __name__ == "__main__":
     an = datetime.now().astimezone()
     durum = "içinde" if mesaide_mi(an) else "dışında"
     print(f"{an:%Y-%m-%d %H:%M} — mesai {durum} ({MESAI_METNI}), sonraki açılış {sonraki_mesai(an):%a %H:%M}")
-    print(f"tavanlar: koşu {KOSU_BUTCESI_USD} USD / {KOSU_SURESI_SN // 60} dk · "
-          f"takım günde {GUNLUK_KOSU_TAVANI} koşu · arası {KOSULAR_ARASI_DK} dk · "
-          f"şirket günde {GUNLUK_MALIYET_TAVANI_USD} USD")
-    print(f"kanal: {kanal()} · .env: {'var' if ENV_DOSYASI.exists() else 'yok'}")
+    print(f"tavanlar: koşu {KOSU_BUTCESI_USD} USD / {KOSU_SURESI_SN // 60} dk / {KOSU_TUR_TAVANI} tur · "
+          f"takım günde {GUNLUK_KOSU_TAVANI} koşu · şirket günde {GUNLUK_MALIYET_TAVANI_USD} USD")
+    e = evre_oku()
+    print(f"evre: {e['evre']} · increment: {e['increment_id'] or '-'} · bekleyen onay: {e['bekleyen_onay'] or '-'}"
+          f" · .env: {'var' if ENV_DOSYASI.exists() else 'yok'}")

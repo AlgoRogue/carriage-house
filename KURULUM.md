@@ -1,205 +1,101 @@
-# KURULUM — sıfırdan altı adım
+# KURULUM — sıfırdan ilk uçtan uca döngüye
 
-Repoyu klonluyorsun: betikler, yetenekler, üç takım ve Stop hook ayarı zaten yerinde. Yapacağın şey
-anahtarları koymak, iskeleti tanımak ve döngüyü bir kez kendi gözünle kapatmak.
+Beş adım. İlk dördü para harcamaz; beşinci adım gerçek motor çağırır.
 
-**Gerekenler**
-
-- `python3` (3.9+) — betiklerin tamamı standart kütüphane, `pip install` yok
-- [Claude Code](https://claude.com/claude-code) CLI: `claude` komutu PATH'te olmalı — koşuları o çalıştırır
-- `gh` (GitHub CLI) — yalnızca kendi kopyanı GitHub'a açacaksan gerekir
-- macOS — `bin/zamanla.py` launchd kullanır (adım 6). Diğer adımlar Linux'ta da çalışır.
-
----
-
-## Adım 1 · Klon ve anahtarlar
+## Adım 1 · Motorlar ve klon
 
 ```bash
-git clone https://github.com/selmakcby/a-sirketi.git
-cd a-sirketi
-cp .env.example .env
-head -1 .gitignore     # ".env" — anahtar dosyası hiçbir zaman commit'e girmez
+which claude agy codex grok     # dördü de yolda olmalı; eksik olan motor koşuda "başlatılamadı" der
+git clone <repo> a-sirketi && cd a-sirketi
+cp .env.example .env            # bugün yalnız VARSAYILAN_MOTOR var; motorlar kendi oturumunu kullanır
 ```
 
-`.env`'i kendi editöründe aç ve doldur. Altı anahtarın hiçbiri zorunlu değil ama boş kalan her
-anahtar bir takımı kapatır:
-
-| Anahtar | Nereden alınır | Boşsa |
-|---|---|---|
-| `TELEGRAM_BOT_TOKEN` | Telegram'da @BotFather → `/newbot` | `x-icerik` koşmaz |
-| `TELEGRAM_CHAT_ID` | aşağıdaki `--chat-id-bul` | `x-icerik` koşmaz |
-| `APIFY_TOKEN` | apify.com → Settings → API tokens | `youtube-analiz` koşmaz |
-| `FAL_KEY` | fal.ai → Keys | paket "kapak: sen ekleyeceksin" notuyla çıkar |
-| `OPENAI_API_KEY` | platform.openai.com | bekçi Haiku'ya düşer, kararına "bekçi aynı aileden — uyarı" notu eklenir |
-| `KANAL` | izlemek istediğin YouTube kanalı (`@kanal`) | `@ornek-kanal` varsayılır |
-
-**Telegram botu 30 saniyede:** @BotFather → `/newbot` → bota bir ad ver → verdiği token'ı
-`TELEGRAM_BOT_TOKEN`'a yaz. Sonra kendi botuna herhangi bir mesaj at ve:
-
-```bash
-python3 bin/telegram_oku.py --chat-id-bul
-```
-
-Çıkan sayıyı `TELEGRAM_CHAT_ID`'ye yaz. Bu filtre olmadan bota yazan herkesin mesajı işlenirdi;
-bu yüzden yalnız o chat id'den gelen mesajlar okunur.
-
-`APIFY_TOKEN`, `FAL_KEY` ve `OPENAI_API_KEY` opsiyoneldir — üçü boşken de döngü döner.
-
----
+Her motorun kendi oturumu açık olmalı (`claude`, `agy`, `codex`, `grok` — hangisini kullanıyorsan onda bir
+kez etkileşimli girip oturum aç). Sürücü anahtar yönetmez; `.env` yalnız takım dosyasının
+`gerekli_anahtarlar:` alanında istenen değişkenler içindir.
 
 ## Adım 2 · Ayakta mı
 
 ```bash
-python3 bin/ayar.py
-python3 -m unittest discover -s tests
+python3 -m unittest discover -s tests      # 43 test — ağ yok, motor yok, para yok
+python3 bin/ayar.py                        # tavanlar, evre: bos, .env var mı
+python3 bin/kapi.py durum                  # "sıradaki: python3 bin/kapi.py talep …"
+python3 bin/kos.py sistem-sevk --kuru      # evre bos → "ATLANIR"; istemi yine de basar
 ```
 
-Birinci komut şirketin bütün sayılarını tek satırda basar: mesai penceresi, koşu başına para ve süre
-tavanı, takım başına günlük koşu sayısı, şirketin günlük tavanı, izlenen kanal ve `.env` var mı.
-Bu sayılar tek yerdedir — `bin/ayar.py`. Değiştirmek istersen orayı değiştirirsin, ikinci bir kopya yok.
+## Adım 3 · İnsanın dosyalarını oku (ve gerekiyorsa değiştir)
 
-İkinci komut reponun kendi testleridir: ajan dosyaları `takim.md` ile tutarlı mı, yetenek bağları
-kopuk mu, `.gitignore` `.env`'i kapsıyor mu, Stop hook bekçiyi çağırıyor mu, repoda anahtara benzeyen
-bir metin var mı. Hepsi geçmeden devam etme.
+Bunlar senindir, ajan dokunamaz: `ANAYASA.md`, `hedef.md`, `kararlar.md`, `kapsam-disi.md`, `sema/`,
+`takimlar/*/kurallar.md`, `bin/kapi.py`. Tavanları `bin/ayar.py` başındaki sabitlerden değiştirirsin
+(15 dk, 2 USD, 6 koşu/gün, 10 USD/gün). Motor tersini `bin/motorlar/__init__.py` içindeki `TERS_MOTOR`'dan.
 
----
-
-## Adım 3 · ANAYASA
+## Adım 4 · Kuru prova — motor çağırmadan bütün evreleri gör
 
 ```bash
-cat ANAYASA.md
+python3 bin/kapi.py talep "kapi.py durum komutu son üç geçmiş olayını da bassın"
+python3 bin/kapi.py durum                  # inc-001 · evre: sozlesme
+python3 bin/kos.py sistem-sevk --kuru      # KOŞAR; istemde okuma sırası, increment bağlamı, şema talimatı
+python3 bin/kos.py sistem-insaat --kuru    # ATLANIR — evre insaat değil (doğru davranış)
+python3 bin/kapi.py red "kuru prova"       # evreyi kapat
 ```
 
-Beş madde: yayın düğmesi insanın · kaynaksız sayı yok · bekçi ayrı kafa · her koşunun tavanı var ·
-defter ajanın, kural insanın. Bu dosya **insanındır**: ajan okur, değiştiremez — `.claude/agents/`
-önsözü her koşuda onu ilk sıraya koyar.
+## Adım 5 · İlk gerçek döngü (para harcar: her koşu bir CLI çağrısı)
 
-Kendi şirketini kuruyorsan maddeleri kendin yazarsın. Buradaki hâli, kelimesi kelimesine dikte
-edilen prompt'la üretildi: [prompts/P03-anayasa.md](prompts/P03-anayasa.md).
-
----
-
-## Adım 4 · Takımları tanı, ajan dosyalarını üret
-
-Üç takım hazır gelir:
+Talep küçük olsun — bitiş çizgisi "döngü bir kez uçtan uca işledi"dir, büyük özellik değil.
 
 ```bash
-ls takimlar/*/
-sed -n '1,10p' takimlar/x-icerik/takim.md      # frontmatter: meslek, model, araçlar, anahtarlar, yetenekler, bütçe
+python3 bin/kapi.py talep "kapi.py durum komutu son üç geçmiş olayını da bassın"
+
+python3 bin/kos.py sistem-sevk            # claude → increment/inc-001/sozlesme.json + increment.md
+cat increment/inc-001/increment.md        # 1 dakikada oku
+python3 bin/kapi.py onayla                # KAPI 1 — motor_adayi'nı kabul; ya da --motor grok
+python3 bin/kapi.py durum                 # evre: insaat · motor: inşaat=codex bekçi=claude
+
+python3 bin/kos.py sistem-insaat          # codex → kod + teslim.json; kapsam sapması ölçülür
+cat increment/inc-001/teslim.json
+git diff --stat                           # inşaatın gerçekten dokunduğu dosyalar
+
+python3 bin/kos.py sistem-bekci           # claude → bekci-raporu.json PASS|FAIL
+cat increment/inc-001/bekci-raporu.json
+
+python3 bin/kapi.py yayinla               # KAPI 2 — kararlar.md'ye satır; evre: yayinlandi
+git add -A && git commit -m "inc-001: …"  # commit senin işin; ajan commit atmaz
 ```
 
-Her takımda dört dosya var: `takim.md` (koşu adımları ve çıktı sözleşmesi), `kurallar.md` (sınırlar),
-`defter.md` (ajanın dersleri), `durum.json` (kuyruk ve son sonuç). `takim.md` **tek kaynaktır**;
-Claude Code'un okuduğu `.claude/agents/<takim>.md` ondan üretilir:
+FAIL gelirse: `kapi.py red "…"` ile kapat ve yeni talep aç, ya da `sozlesme.json`'u düzeltip
+(`chmod 644 increment/inc-001/sozlesme.onayli.json` gerekmez — taslağı düzeltirsin) evreyi elle `sozlesme`'ye
+alıp yeniden onayla. `red` sebebi `takimlar/sistem-sevk/durum.json`'a düşer; sevk bir sonraki koşuda okur.
+
+## Motor duman testi (isteğe bağlı, ücretli)
+
+Bir motorun JSON çıktısının adaptörle uyuştuğunu doğrulamak için tek satırlık koşu:
 
 ```bash
-python3 bin/agents_uret.py            # .claude/agents/<takim>.md yazılır
-head -8 .claude/agents/x-icerik.md    # ilk satır ajanın kimliğidir
-python3 bin/agents_uret.py --check    # takim.md değişip üretim unutulmuşsa 1 döner
+python3 - <<'EOF'
+import subprocess, sys; sys.path.insert(0, "bin"); import motorlar
+for ad in ("claude", "agy", "codex", "grok"):
+    m = motorlar.motor_al(ad)
+    sema = {"type": "object", "properties": {"selam": {"type": "string"}}, "required": ["selam"]}
+    ayar = {"model": None, "effort": None, "araclar": ["Read"], "butce_usd": 0.1, "json_sema": sema,
+            "sema_dosyasi": "/tmp/s.json", "maks_tur": 2}
+    open("/tmp/s.json", "w").write(__import__("json").dumps(sema))
+    try:
+        r = subprocess.run(m.komut('Yalnız {"selam":"merhaba"} döndür.', ayar), capture_output=True, text=True, timeout=120)
+        print(ad, m.cozumle(r.stdout))
+    except Exception as e:
+        print(ad, "hata:", e)
+EOF
 ```
+`yapisal` alanı `{"selam": "merhaba"}` dönmeli. Dönmüyorsa o motorun adaptöründe (`bin/motorlar/<ad>.py`)
+`cozumle` alan adlarını düzelt — grok için `METIN_ALANLARI` listesi bunun için var.
 
-İlk satır şudur: **"Sen `x-icerik` ajanısın. A Şirketi'nde bir çalışansın ve bir yapay zekâ ajanısın.
-Mesleğin: …"** — ardından okuma sırası (`ANAYASA.md` → `sirket/AJAN-KIMLIGI.md` →
-`takimlar/x-icerik/kurallar.md`) ve yetenek satırı gelir. `skills:` alanı agent frontmatter'ına
-sızmaz; önsözdeki tek satıra dönüşür.
+## Sorun giderme
 
-Kendi takımını açmak istersen:
-
-```bash
-bin/takim-olustur.sh <yeni-takim>     # iskeletten dört dosya
-```
-
-Sonra `takim.md`'nin içini doldurursun. Bu üç dosya Claude Code'a yazdırıldı; kullanılan prompt'lar
-[prompts/P05a-x-icerik-takim.md](prompts/P05a-x-icerik-takim.md),
-[P05b](prompts/P05b-youtube-analiz-takim.md), [P05c](prompts/P05c-twitter-icerik-takim.md)
-dosyalarında — kendi takımın için şablon olarak kullanabilirsin.
-
----
-
-## Adım 5 · Döngüyü kapat
-
-Önce kuru koşu: `claude` çağrılmaz, hiçbir dosyaya yazılmaz.
-
-```bash
-cat .claude/settings.json              # Stop → bin/bekci.py
-python3 bin/kos.py x-icerik --kuru
-```
-
-Çıktı modeli, bütçeyi, araçları, yetenekleri, koşu kaydının yazılacağı yolu ve kurulan istemi basar.
-En önemlisi **kimlik satırı** — ajanın koşuda gördüğü ilk cümle:
-
-```
-  yetenekler: kaynak-dogrulama, iddia-ayristirma-ve-kanit-defteri, kaynak-kimlik-dogrulama
-  kimlik (istemin ilk satırı): Sen `x-icerik` ajanısın. A Şirketi'nde bir çalışansın ve bir
-  yapay zekâ ajanısın. Mesleğin: X içerik takımı — …
-```
-
-Sonra gerçeği:
-
-```bash
-# 1) Telefonundan bota bir X linki at (yanına bir de not yazabilirsin)
-python3 bin/telegram_oku.py --son 5     # mesajı gördün mü (durum değişmez)
-python3 bin/telegram_oku.py --isle      # link → takimlar/x-icerik/gelen/*.json
-python3 bin/kos.py x-icerik             # ajan koşar, bekçi Stop hook'ta denetler
-tail -20 takimlar/x-icerik/kosu/*.md    # en altta "## Bekçi — karar: kabul/red"
-python3 bin/dagitici.py --kuru          # zinciri göster: x-<id> → twitter-icerik/aci-<id>
-python3 bin/dagitici.py                 # zinciri kur ve twitter-icerik'i koştur
-```
-
-Koşu birkaç dakika sürer. Bekçi red verirse ajan **aynı oturumda** düzeltmeye gider (en fazla iki
-kez), sonra kayıt kapanır; kararın tamamı koşu kaydının altındadır ve `durum.json` → `bekci` alanına
-düşer. İkinci kez `--isle` çalıştırmak boş döner — hata değil, Telegram aynı güncellemeyi ikinci kez
-vermez.
-
-Sonunda `takimlar/twitter-icerik/cikti/<tarih>-<slug>/article.html` durur. Hiçbir yere yayınlanmaz:
-tarayıcıda açar, okursun, yayın kararını sen verirsin.
-
-Gerçek bir koşunun kaydı ve çıktısı: [docs/ornek-kosu/](docs/ornek-kosu/).
-
----
-
-## Adım 6 · Sürekli çalıştır
-
-İki parça var: olay tetiği ve saatli tetik.
-
-```bash
-python3 bin/telegram_dinle.py --bir-kez     # tek tur — önce bunu dene
-python3 bin/telegram_dinle.py               # sonsuz long-poll: mesaj düştüğü an x-icerik koşar
-```
-
-Dinleyici açıkken bota link attığın an koşu başlar; `--isle` yazmana gerek kalmaz. Mesai dışında
-gelen mesaj `gelen/` altına yazılır ve kuyruğa `bekliyor` düşer, koşu sabaha kalır.
-
-Saatli tetik sabah dağıtıcıyı koşturur, akşam günü denetler:
-
-```bash
-python3 bin/gunluk.py --sabah --kuru        # hiçbir takımı başlatmadan sabah raporunu ekrana bas
-python3 bin/zamanla.py --kuru               # kurulacak launchd plist'lerini göster
-python3 bin/zamanla.py --kur                # tetikleri yükle
-python3 bin/zamanla.py --durum              # yüklü mü, ne zaman koşacak
-```
-
-Raporlar `sirket-log/rapor/YYYY-MM-DD-{sabah,aksam}.md` altına yazılır ve dışarı hiçbir şey gitmez.
-Bu adımı Claude Code'a yaptırmak istersen: [prompts/P11-surekli-calistir.md](prompts/P11-surekli-calistir.md).
-Bilgisayar o saatte kapalıysa launchd kaçan işi açılışta koşturur. Kaldırmak: `python3 bin/zamanla.py --kaldir`.
-
-Kendi kopyanı GitHub'a açacaksan, önce `.env` sızmadığından emin ol:
-
-```bash
-git status                # .env LİSTEDE OLMAMALI
-gh repo create <ad> --public --source=. --push
-```
-
----
-
-## Sıfırdan kendin kurmak istersen
-
-Bu repo hazır alınmak zorunda değil: boş bir klasörde, Claude Code'a sırayla on iki prompt vererek
-aynı şirket sıfırdan kurulur — `CLAUDE.md`, `ANAYASA.md`, üç `takim.md`, ajan dosyaları, kuru koşu,
-gerçek koşu, dağıtıcı, GitHub, sürekli çalıştırma. Prompt'ların tamamı, olduğu gibi
-kopyalayıp yapıştırılacak hâlde:
-
-**[prompts/](prompts/)** — sıra tablosu, her prompt ayrı dosyada, beklenen çıktısı ve dikkat notuyla.
-
-Repoyu klonladıysan kopyalama adımları (P1, P2) sana gerekmez: o dosyalar zaten yerinde. Geri kalan
-prompt'ları kendi klasöründe, kendi anayasan ve kendi takımlarınla tekrarlayabilirsin.
+| Belirti | Sebep / çözüm |
+|---|---|
+| `atlandı — evre uyuşmuyor` | Takım yanlış evrede çağrıldı. `kapi.py durum` sıradaki komutu söyler. |
+| `atlandı — motor çözülemedi` | `motor: sozlesme`/`ters` ama Kapı 1 geçilmemiş; ya da bilinmeyen motor adı. |
+| `son_sonuc: gecersiz` | Motor JSON döndürdü ama şemaya uymuyor; `durum.json.son_sebep` hatayı yazar. Sevk'i yeniden koştur. |
+| `son_sonuc: red` | Katman A: boş kayıt, gizli veri ya da korunan dosyaya dokunma; ya da sevk/bekçi klasörü dışına yazdı. |
+| `son_sonuc: hata` | Motor başlatılamadı, süre aştı ya da koşu kaydı yazılmadı; koşu kaydının sonunda ham çıktı var. |
+| Bekçi raporunda `motor` yanlış | Ajan üreten motoru yazmış; sürücü geçersiz sayar. Ters motor `evre.json.motor.bekci`'de. |

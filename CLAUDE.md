@@ -1,41 +1,46 @@
 # A Şirketi
 
-> Her gün elle yaptığım işleri yapan üç ajanlık küçük şirket. Yayın düğmesi insanda.
+> Farklı yapay zekâ CLI'larını (claude, agy, codex, grok) yöneten deterministik üst katman. Üç ajan sistemi
+> bir increment ileri götürür ve durur; yayın düğmesi insanda (iki kapı).
 
 ## Ne bu
-- **x-icerik** — Telegram'dan gelen X linkini doğrular, iddia tablosu + karar yazar.
-- **youtube-analiz** — haftalık video ve yorum verisini çeker, rapor çıkarır.
-- **twitter-icerik** — doğrulanmış konudan X Article paketi kurar.
-- **bekçi** (`bin/bekci.py`) — Stop hook'ta her koşuyu denetler; red verirse ajan aynı oturumda düzeltir.
-- **dağıtıcı** (`bin/dagitici.py`) — zinciri kurar (x-icerik → twitter-icerik). Takımlar birbirine mesaj atmaz.
-- **dinleyici** (`bin/telegram_dinle.py`) — bota mesaj düştüğü an x-icerik koşar; olay tetikli, zamanlayıcısız.
-- **günlük** (`bin/gunluk.py`) — sabah 09:00 dağıtıcıyı koşturup rapor yazar, akşam 22:00 günü denetler.
-  Zamanlayıcıyı `bin/zamanla.py --kur` kurar (launchd); raporlar `sirket-log/rapor/` altında, dışarı gitmez.
+- **sistem-sevk** — insanın tek cümlesini dondurulmuş increment sözleşmesine çevirir (`claude`).
+- **sistem-insaat** — onaylı sözleşmeyi koda işler; motor sözleşmeden gelir (`codex` varsayılan; agy/grok/claude).
+- **sistem-bekci** — sözleşmeye karşı kanıtla PASS/FAIL; motor üretenin tersi (`bin/motorlar/TERS_MOTOR`).
+- **sürücü** (`bin/kos.py`) — evre kontrolü, motor çözümü, şema zorlamalı çıktı, git ile kapsam ölçümü, evre geçişi.
+- **kapı** (`bin/kapi.py`) — insanın düğmeleri: `talep · onayla (Kapı 1) · yayinla (Kapı 2) · red · durum`.
+- **bekçi katman A** (`bin/bekci.py`) — LLM'siz: boş kayıt, gizli veri, insanın dosyasına dokunma → red.
 
-Döngü kapalı, ama **yayın düğmesi insanda**: hiçbir takım sosyal hesaba yazmaz, mail atmaz,
-yorum bırakmaz — taslağa kadar gider ve durur.
+Döngü: `kapi talep → kos sistem-sevk → kapi onayla → kos sistem-insaat → kos sistem-bekci → kapi yayinla`.
+Sürücü bir sonraki takımı asla kendisi başlatmaz.
 
 ## Okuma sırası (her ajan, her koşuda)
 1. `ANAYASA.md` — değişmez çerçeve
-2. `sirket/AJAN-KIMLIGI.md` — kimsin, nasıl çalışırsın
-3. `takimlar/<takim>/kurallar.md` — takımın sınırları
-4. `takimlar/<takim>/takim.md` — koşu adımları ve çıktı sözleşmesi
-5. `skills/` — işi karşılayan yetenek varsa
+2. `sirket/AJAN-KIMLIGI.md` — kimsin, döngüdeki yerin
+3. `hedef.md` · `kararlar.md` · `kapsam-disi.md` — SoT
+4. `takimlar/<takim>/kurallar.md` — takımın sınırları
+5. `takimlar/<takim>/takim.md` — koşu adımları ve çıktı sözleşmesi
+6. `increment/evre.json` ve `increment/<id>/` — aktif işin artefaktları
 
 ## Klasör yapısı
 ```
-bin/                  kos.py (koşu sürücüsü) · bekci.py (bekçi) · dagitici.py (dağıtıcı)
-                      telegram_dinle.py (olay tetiği) · gunluk.py + zamanla.py (sabah/akşam)
-sirket-log/rapor/     sabah raporu ve akşam denetimi — git'e girmez
-takimlar/<takim>/     takim.md · kurallar.md · defter.md · durum.json · kosu/ · cikti/
-skills/<ad>/SKILL.md  yetenekler — her birinde kaynak ve lisans yazar
-sirket/               AJAN-KIMLIGI.md · YETENEKLER.md
+bin/                  kos.py · kapi.py · bekci.py · sema.py · ayar.py · agents_uret.py · motorlar/<ad>.py
+sema/                 increment-sozlesmesi · teslim · bekci-raporu · evre (.schema.json) — dondurulmuş
+increment/            evre.json · <id>/{sozlesme.json, sozlesme.onayli.json, increment.md, teslim.json, park.md, bekci-raporu.json}
+takimlar/<takim>/     takim.md · kurallar.md · defter.md · durum.json · kosu/
+tests/                python3 -m unittest discover -s tests — ağ yok, motor yok
 .env                  anahtarlar — asla commit'e girmez
 ```
-`defter.md` ajanındır (ders yazar), `kurallar.md` insanın. Koşu kaydı `kosu/`, ürün `cikti/`.
+`defter.md` ajanındır, `kurallar.md` insanın. Koşu kaydı `kosu/`; artefakt `increment/<id>/`.
+
+## Bu repoda Claude Code ile çalışırken
+- Kod Türkçe adlandırılır, stdlib kullanır, ağ çağırmaz; test `unittest` ile koşar.
+- Bir takım için değişiklik istenirse önce `takim.md` (kaynak), sonra `agents_uret.py` `.claude/agents/`'ı üretir.
+- Yeni motor = `bin/motorlar/<ad>.py` (`YETENEK`, `komut`, `cozumle`) + `MOTORLAR`/`TERS_MOTOR` + test.
 
 ## Yasaklar
 - `.env` okuma, açma, ekrana basma — anahtar yalnız süreç ortamından gelir
-- Sosyal hesaba yazma, mail gönderme, yorum bırakma
+- Ajan olarak commit/push/tag; sosyal hesaba yazma; mail; dış servise yazma
 - Para harcama — abonelik, satın alma, tavan dışı ücretli çağrı
-- `ANAYASA.md` ve `kurallar.md` değiştirme — ikisi de insanındır
+- `ANAYASA.md`, `hedef.md`, `kararlar.md`, `kapsam-disi.md`, `sema/`, `kurallar.md`, `sozlesme.onayli.json`,
+  `bin/kapi.py` değiştirme — hepsi insanındır

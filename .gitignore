@@ -1,15 +1,12 @@
 .env
 .kos.lock
-.kos-*.lock
 __pycache__/
 *.pyc
 *.jsonl
 sirket-log/
-sirket/log/
 takimlar/*/kosu/
-takimlar/*/cikti/
-takimlar/*/gelen/
-takimlar/*/veri/
+takimlar/*/.bekci-deneme
+increment/*/.sema-*.json
 .obsidian/
 *.canvas
 .DS_Store

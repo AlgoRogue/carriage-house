@@ -1,0 +1,17 @@
+{
+  "$comment": "sistem-insaat'ın tek çıktısı. Kapsam sapması sürücü tarafından git diff ile ayrıca ölçülür.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["increment_id", "motor", "diff_ozeti", "calistirilan_komutlar", "yapilmayanlar", "park_var"],
+  "properties": {
+    "increment_id": {"type": "string", "minLength": 1},
+    "motor": {"type": "string", "enum": ["codex", "agy", "grok", "claude"]},
+    "diff_ozeti": {"type": "string", "minLength": 1,
+                   "description": "Hangi dosyada ne değişti — dosya başına bir satır."},
+    "calistirilan_komutlar": {"type": "array", "items": {"type": "string"}},
+    "yapilmayanlar": {"type": "array", "items": {"type": "string"},
+                      "description": "Sözleşmede olup yapılmayanlar ve sebebi. Boş = hepsi yapıldı."},
+    "park_var": {"type": "boolean",
+                 "description": "true ise increment/<id>/park.md yazılmıştır (erteleme; koda girmez)."}
+  }
+}
