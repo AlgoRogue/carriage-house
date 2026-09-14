@@ -1,0 +1,60 @@
+{
+  "increment_id": "inc-001",
+  "hedef_davranis": "`python3 bin/uygulama.py [--port 8765]` yalnız 127.0.0.1'de dinler ve `GET /` her istekte `increment/evre.json` ile aktif `increment/<id>/` klasörünü okuyup evre, bekleyen onay, kilitli motorlar (inşaat/bekçi), talep, sıradaki adım (`bin/kapi.py durum` ile aynı komut metni), varsa bekçi kararı ve artefakt bağlantılarını (`GET /evre.json`, `GET /artefakt/<ad>` → text/plain; yalnız aktif klasördeki dosya adı, `/` ya da `..` içeren ad → 404) içeren salt-okur bir HTML sayfası döner; GET dışı her yöntem 405 alır ve hiçbir istek dosya yazmaz.",
+  "dokunulacak_yollar": [
+    "README.md"
+  ],
+  "yeni_dosyalar": [
+    "bin/uygulama.py",
+    "tests/test_uygulama.py"
+  ],
+  "motor_adayi": "codex",
+  "kabul_kriterleri": [
+    {
+      "aciklama": "Sunucu dosyası var; stdlib `http.server` ile yazılmış, kök dizin parametreyle verilebilir (testler sahte kök kullanır), host sabit 127.0.0.1 (bind adresi seçeneği yok).",
+      "dogrulama": {
+        "tip": "dosya",
+        "deger": "bin/uygulama.py"
+      }
+    },
+    {
+      "aciklama": "Test dosyası var: sahte kökte port 0'da sunucu açar; GET / içinde increment id, evre, bekleyen onay, motorlar, sıradaki adım ve artefakt bağlantıları var; GET /artefakt/<ad> dosya içeriğini döner; `..` içeren ad 404; POST/PUT/DELETE 405; isteklerden sonra evre.json ve artefaktlar değişmemiş.",
+      "dogrulama": {
+        "tip": "dosya",
+        "deger": "tests/test_uygulama.py"
+      }
+    },
+    {
+      "aciklama": "Tüm testler geçer (ağ yok, motor yok; yalnız loopback).",
+      "dogrulama": {
+        "tip": "komut",
+        "deger": "python3 -m unittest discover -s tests"
+      }
+    },
+    {
+      "aciklama": "bin/uygulama.py yalnız stdlib ve repo içi bin modüllerini içe alır; üçüncü parti bağımlılık yok.",
+      "dogrulama": {
+        "tip": "komut",
+        "deger": "python3 -c \"import ast,sys; a=ast.parse(open('bin/uygulama.py',encoding='utf-8').read()); m=set(); [m.update([al.name.split('.')[0] for al in n.names] if isinstance(n,ast.Import) else [(n.module or '').split('.')[0]]) for n in ast.walk(a) if isinstance(n,(ast.Import,ast.ImportFrom))]; d=m-set(sys.stdlib_module_names)-{'ayar','kapi','sema','motorlar',''}; print('dis bagimlilik:',d) if d else None; sys.exit(1 if d else 0)\""
+      }
+    },
+    {
+      "aciklama": "Canlı kontrol: sunucu 127.0.0.1:8765'te açılır, GET / HTML döner ve içinde 'inc-001' geçer, POST 405 alır, istek öncesi/sonrası increment/evre.json sha256 özeti aynı.",
+      "dogrulama": {
+        "tip": "komut",
+        "deger": "python3 bin/uygulama.py --port 8765 >/dev/null 2>&1 & P=$!; sleep 1; H1=$(sha256sum increment/evre.json); python3 -c \"import urllib.request,urllib.error,sys\nb=urllib.request.urlopen('http://127.0.0.1:8765/').read().decode('utf-8')\nok='inc-001' in b and '<html' in b.lower()\ntry:\n    urllib.request.urlopen(urllib.request.Request('http://127.0.0.1:8765/', data=b'x', method='POST')); ok=False\nexcept urllib.error.HTTPError as e:\n    ok=ok and e.code==405\nsys.exit(0 if ok else 1)\"; R=$?; H2=$(sha256sum increment/evre.json); kill $P; [ $R -eq 0 ] && [ \"$H1\" = \"$H2\" ]"
+      }
+    }
+  ],
+  "durma_kosulu": "Sayfayı üretmek için bin/kapi.py, sema/ ya da SoT dosyalarına dokunmak gerekiyorsa; \"sıradaki adım\" metni kapi.durum() ile çelişmeden türetilemiyorsa; ya da evre.json/aktif klasör eksikken sayfanın ne göstereceği (beklenen: evre 'bos', bağlantı yok) sözleşmeden çıkarılamıyorsa → park.md yaz, iade et.",
+  "kapsam_disi": [
+    "Her türlü yazma eylemi: talep, red, onayla (Kapı 1), yayinla (Kapı 2), kos.py tetiği, form/POST rotası",
+    "Uzak erişim: 0.0.0.0/LAN bind seçeneği, TLS, kimlik doğrulama, oturum",
+    "Otomatik yenileme (polling, meta refresh), JavaScript, CSS (en fazla tek satır inline stil)",
+    "bin/kapi.py, sema/, ANAYASA.md, hedef.md, kararlar.md, kapsam-disi.md, kurallar.md değişikliği",
+    "Uygulamanın kendi durumu/önbelleği/kuyruğu; evre.json veya artefaktlara yazma",
+    "LLM/motor çağrısı; systemd servis dosyası; README dışında belge değişikliği",
+    "Geçmiş increment'lerin (inc-000 vb.) listelenmesi — yalnız aktif increment"
+  ],
+  "yayin_anlami": "Kapı 2'de bin/uygulama.py canlıya alınır: etkileşim katmanının 1/5. parçası (salt-okur durum sayfası) çalışır sayılır ve kararlar.md'ye satır düşer; sonraki increment (talep + red) bu dosyanın üstüne kesilir. SoT değişmez — uygulama SoT değil, increment/evre.json ve increment/<id>/ artefaktlarının insan yüzüdür."
+}
