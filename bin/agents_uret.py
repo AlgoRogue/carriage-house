@@ -15,7 +15,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import ayar  # noqa: E402
 
-SIRKET_ALANLARI = {"gerekli_anahtarlar", "butce_usd", "skills"}
+SIRKET_ALANLARI = {"gerekli_anahtarlar", "butce_usd", "skills", "motor", "effort"}
 AGENT_ALANLARI = ("name", "description", "model", "tools")
 
 YETENEK_METNI = "Yeteneklerin: {liste} — ilgili adımda oku ve uygula."
