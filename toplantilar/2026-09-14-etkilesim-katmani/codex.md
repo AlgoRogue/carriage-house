@@ -1,5 +1,5 @@
 # codex — etkileşim katmanı görüşü
-> tur: 1
+> tur: 2
 
 ## 1. Ne
 
@@ -42,6 +42,9 @@ loopback arka uca doğrulanmış kimlik aktarmalı, uygulama sahte istemci başl
 POST'larda kısa ömürlü oturum, CSRF koruması, yeniden doğrulama ve ekranda görünen kimlik olmalı.
 Kimlik sırrı repoya, `.env` üzerinden ajan ortamına veya koşu istemine girmemeli. “İnsan” olmanın teknik
 karşılığı, ajanların sahip olmadığı bu oturumla imzalanmış ve CSRF-doğrulanmış bir insan isteğidir.
+`increment_id`yi forma yeniden yazmak yararlı bir niyet teyididir, fakat kimlik doğrulama değildir; aynı
+değeri dosyadan okuyabilen bir ajan veya ele geçirilmiş istemci de yazabilir. Benzer biçimde ortak bir
+`.env` jetonu, süreçleri ve repoyu görebilen ajanlardan gerçekten ayrı tutulamıyorsa insan kapısını kanıtlamaz.
 
 ## 3. Nasıl etkileşim
 
@@ -124,3 +127,18 @@ bir motordan diğerine metin taşımasını istememeli.
 Son olarak mobil görünüm yeni bir ürün yönetimi kapsamına şişirilmemeli. Sohbet, bildirim altyapısı, zengin
 editör, çoklu kullanıcı rolleri, genel görev kuyruğu ve görsel diff ancak gerçek kullanım kanıtıyla ayrı
 increment olabilir; ilk iş kapıların rengini güzelleştirmek değil, aynı deterministik kapıyı güvenle uzatmaktır.
+
+## 2. turda değişen
+
+Agy ve Grok'un dosyaları, stdlib Python, dosyaların SoT olması, `kapi.py`/`kos.py`nin alt süreç olarak
+kullanılması, koşuların zincirlenmemesi ve ilk increment'in salt-okur olması konularındaki ortak zemini
+güçlendirdi; bu ana önerileri değiştirmedim. Grok'un kapıda `increment_id` yazdırma fikrini niyet teyidi
+olarak yararlı buldum ve bunun kimlik doğrulamanın yerine geçemeyeceğini 2. bölüme açıkça ekledim.
+
+Agy'nin `.env` içindeki ortak jeton önerisine ve Grok'un “OAuth değil, onayın maliyeti” tezine katılmıyorum:
+dosyayı okuyabilen ajan aynı jetonu kullanabilir, görünen kimliği tekrar yazmak da isteğin bir insandan
+geldiğini ispatlamaz. Bu nedenle yetki sırrının ajan çalışma ortamının dışında tutulduğu özel ağ/kimlik
+proxy'si, kısa ömürlü insan oturumu ve işlem anında yeniden doğrulama önerimi korudum. Agy'nin SPA/PWA ve SSE
+önerisini de ilk dilimde gerekli görmedim; sunucu-taraflı HTML ve gerekirse polling daha küçük, ölçülebilir
+bir yüzey bırakır. Grok'un koşu HTTP isteğini açık tutmama vurgusu zaten 3. bölümdeki sunucuda bağımsız
+tamamlama yaklaşımıyla uyumluydu; ayrıca değişiklik gerektirmedi.
