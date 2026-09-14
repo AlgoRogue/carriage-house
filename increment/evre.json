@@ -1,12 +1,21 @@
 {
-  "increment_id": null,
-  "evre": "bos",
-  "bekleyen_onay": null,
+  "increment_id": "inc-001",
+  "evre": "sozlesme",
+  "bekleyen_onay": "sozlesme",
   "motor": {
     "insaat": null,
     "bekci": null
   },
-  "talep": null,
+  "talep": "127.0.0.1'de dinleyen stdlib HTTP sunucusu (bin/uygulama.py): GET / evre.json ve aktif increment artefaktlarından evre, bekleyen onay, kilitli motorlar, sıradaki adım ve artefakt bağlantılarını salt-okur HTML olarak gösterir; hiçbir yazma eylemi sunmaz",
   "kapsam_sapmasi": [],
-  "gecmis": []
+  "gecmis": [
+    {
+      "zaman": "2026-09-15T00:09:26+03:00",
+      "olay": "talep: 127.0.0.1'de dinleyen stdlib HTTP sunucusu (bin/uygulama.py): GET / evre.json ve aktif increment artefaktlarından evre, bekleyen onay, kilitli motorlar, sıradaki adım ve artefakt bağlantılarını salt-okur HTML olarak gösterir; hiçbir yazma eylemi sunmaz"
+    },
+    {
+      "zaman": "2026-09-15T00:12:56+03:00",
+      "olay": "sevk: taslak sözleşme geçerli → KAPI 1 bekliyor"
+    }
+  ]
 }

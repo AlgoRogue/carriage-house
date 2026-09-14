@@ -1,13 +1,22 @@
 {
   "takim": "sistem-sevk",
-  "son_kosu": null,
-  "son_sonuc": null,
-  "son_motor": null,
-  "kuyruk": [],
+  "son_kosu": "2026-09-15T00:09:30+03:00",
+  "son_sonuc": "tamam",
+  "son_motor": "claude",
+  "kuyruk": [
+    {
+      "id": "inc-001",
+      "durum": "yapiliyor",
+      "not": "127.0.0.1'de dinleyen stdlib HTTP sunucusu (bin/uygulama.py): GET / evre.json ve aktif increment artefaktlarından evre, bekleyen onay, kilitli motorlar, sıradaki adım ve artefakt bağlantılarını salt-okur HTML olarak gösterir; hiçbir yazma eylemi sunmaz"
+    }
+  ],
   "bekci": {
-    "son_karar": null,
-    "red_sayisi_7g": 0
+    "son_karar": "kabul",
+    "red_sayisi_7g": 0,
+    "gerekce": "katman A temiz: kayıt dolu, gizli veri yok, korunan dosya değişmedi",
+    "zaman": "2026-09-15T00:12:56+03:00"
   },
-  "defter_son_ders": null,
-  "sayaclar": {}
+  "defter_son_ders": "2026-09-15 · talep SoT ile örtüşünce sevk'in işi yeniden tasarlamak değil, yazılmamış ayrıntıyı (bağlantı rotası, 405, dosya değişmezliği) komut kriterine çevirmek",
+  "sayaclar": {},
+  "son_sebep": null
 }

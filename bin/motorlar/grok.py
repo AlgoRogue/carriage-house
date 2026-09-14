@@ -9,6 +9,20 @@ from ._ortak import bozuk, sonuc, yapisal_coz
 
 YETENEK = {"maliyet_raporlar": False, "arac_kisiti": True, "json_sema": True, "tur_tavani": True}
 METIN_ALANLARI = ("result", "response", "text", "content", "message", "output")
+# Takım dosyaları araçları Claude adıyla yazar; grok'un yerleşik adları farklı (oturum kayıtlarından doğrulandı).
+ARAC_ESLEME = {"Read": ["read_file", "list_dir"], "Write": ["write"], "Edit": ["search_replace"],
+               "Glob": ["list_dir"], "Grep": ["grep"], "Bash": ["run_terminal_command"],
+               "WebSearch": ["search_tool"], "WebFetch": ["search_tool"]}
+
+
+def araclari_cevir(araclar):
+    """Claude araç adları → grok araç adları; bilinmeyen ad olduğu gibi geçer, tekrarlar atılır."""
+    sonuc_ = []
+    for ad in araclar or []:
+        for g in ARAC_ESLEME.get(ad, [ad]):
+            if g not in sonuc_:
+                sonuc_.append(g)
+    return sonuc_
 
 
 def komut(istem, ayarlar):
@@ -16,7 +30,7 @@ def komut(istem, ayarlar):
     komut_ = ["grok", "-p", istem, "--output-format", "json", "--permission-mode", "acceptEdits",
               "--always-approve", "--no-subagents", "--no-plan"]
     if araclar:
-        komut_.extend(["--tools", ",".join(araclar)])
+        komut_.extend(["--tools", ",".join(araclari_cevir(araclar))])
     if not any(a.lower().startswith("web") for a in araclar):
         komut_.append("--disable-web-search")
     if ayarlar.get("model"):

@@ -96,13 +96,15 @@ class GrokTesti(unittest.TestCase):
     def test_komut_arac_kisiti_ve_tur_tavani(self):
         k = motorlar.grok.komut("x", {**AYAR, "json_sema": SEMA, "effort": "low", "model": "grok-4"})
         self.assertEqual(k[:2], ["grok", "-p"])
-        self.assertEqual(k[k.index("--tools") + 1], "Read,Write")
+        self.assertEqual(k[k.index("--tools") + 1], "read_file,list_dir,write")  # Claude adı → grok adı
         self.assertEqual(k[k.index("--max-turns") + 1], "40")
         self.assertIn("--disable-web-search", k)
         self.assertIn("--json-schema", k)
         self.assertEqual(k[k.index("-m") + 1], "grok-4")
         k2 = motorlar.grok.komut("x", {**AYAR, "araclar": ["Read", "WebSearch"]})
         self.assertNotIn("--disable-web-search", k2)
+        self.assertEqual(motorlar.grok.araclari_cevir(["Read", "Edit", "Glob", "Bash", "ozel"]),
+                         ["read_file", "list_dir", "search_replace", "run_terminal_command", "ozel"])
 
     def test_cozumle_toleransli(self):
         c = motorlar.grok.cozumle(json.dumps({"result": '{"a": "g"}', "num_turns": 4}))

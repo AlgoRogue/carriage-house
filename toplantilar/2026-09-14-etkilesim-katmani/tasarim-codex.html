@@ -1,0 +1,663 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>A Şirketi · Increment durumu</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --zemin: #f3f5f7;
+      --yuzey: #ffffff;
+      --yuzey-ikincil: #eef2f5;
+      --metin: #17212b;
+      --soluk: #5c6875;
+      --cizgi: #d7dde3;
+      --vurgu: #175cd3;
+      --vurgu-koyu: #0f3f93;
+      --basari: #087443;
+      --basari-zemin: #e7f7ef;
+      --uyari: #895700;
+      --uyari-zemin: #fff3d6;
+      --hata: #b42318;
+      --hata-zemin: #ffebe9;
+      --golge: 0 10px 30px rgba(23, 33, 43, 0.08);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        color-scheme: dark;
+        --zemin: #0d1319;
+        --yuzey: #151e27;
+        --yuzey-ikincil: #1c2732;
+        --metin: #edf2f7;
+        --soluk: #a9b6c3;
+        --cizgi: #344353;
+        --vurgu: #77a8ff;
+        --vurgu-koyu: #a9c7ff;
+        --basari: #68d9a1;
+        --basari-zemin: #113c2b;
+        --uyari: #ffd176;
+        --uyari-zemin: #493817;
+        --hata: #ff9b94;
+        --hata-zemin: #4b211f;
+        --golge: 0 12px 32px rgba(0, 0, 0, 0.28);
+      }
+    }
+
+    * { box-sizing: border-box; }
+
+    html { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+
+    body {
+      margin: 0;
+      background: var(--zemin);
+      color: var(--metin);
+      line-height: 1.55;
+    }
+
+    a { color: var(--vurgu); text-underline-offset: 0.18em; }
+    a:hover { color: var(--vurgu-koyu); }
+
+    a:focus-visible,
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    summary:focus-visible {
+      outline: 3px solid var(--vurgu);
+      outline-offset: 3px;
+    }
+
+    code,
+    pre { font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace; }
+
+    code { overflow-wrap: anywhere; }
+
+    .atlama-baglantisi {
+      position: absolute;
+      left: 1rem;
+      top: -5rem;
+      padding: 0.7rem 1rem;
+      background: var(--metin);
+      color: var(--yuzey);
+      z-index: 10;
+    }
+
+    .atlama-baglantisi:focus { top: 1rem; }
+
+    .sayfa-basligi,
+    .sayfa-govdesi,
+    .kaynak-notu {
+      width: min(72rem, calc(100% - 2rem));
+      margin-inline: auto;
+    }
+
+    .sayfa-basligi {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 1rem;
+      padding-block: 2.2rem 1.2rem;
+    }
+
+    .sayfa-basligi h1 {
+      margin: 0;
+      font-size: clamp(1.55rem, 4vw, 2.2rem);
+      letter-spacing: -0.025em;
+    }
+
+    .ust-baslik {
+      margin: 0 0 0.15rem;
+      color: var(--soluk);
+      font-size: 0.78rem;
+      font-weight: 750;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .okuma-durumu {
+      margin: 0;
+      color: var(--soluk);
+      font-size: 0.9rem;
+      text-align: right;
+    }
+
+    .sayfa-govdesi {
+      display: grid;
+      gap: 1rem;
+      padding-bottom: 2rem;
+    }
+
+    .kart,
+    .sonraki-dilim {
+      background: var(--yuzey);
+      border: 1px solid var(--cizgi);
+      border-radius: 1rem;
+      box-shadow: var(--golge);
+    }
+
+    .kart { padding: clamp(1rem, 3vw, 1.5rem); }
+
+    .durum-ozeti {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(17rem, 0.75fr);
+      gap: 1rem;
+    }
+
+    .durum-ana,
+    .durum-ayrinti {
+      padding: clamp(1rem, 3vw, 1.5rem);
+      background: var(--yuzey);
+      border: 1px solid var(--cizgi);
+      border-radius: 1rem;
+      box-shadow: var(--golge);
+    }
+
+    .durum-satiri {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.7rem;
+      margin-bottom: 1rem;
+    }
+
+    .increment-kimligi {
+      margin: 0;
+      font-size: clamp(1.4rem, 3vw, 1.85rem);
+    }
+
+    .evre-rozeti,
+    .mod-rozeti,
+    .tip-rozeti,
+    .sonuc-rozeti {
+      display: inline-flex;
+      align-items: center;
+      min-height: 1.75rem;
+      padding: 0.2rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 750;
+      letter-spacing: 0.02em;
+    }
+
+    .evre-rozeti { background: #e8efff; color: #174ea6; }
+    .mod-rozeti { background: var(--yuzey-ikincil); color: var(--soluk); }
+    .tip-rozeti { background: var(--yuzey-ikincil); color: var(--metin); }
+    .sonuc-rozeti { background: var(--basari-zemin); color: var(--basari); }
+
+    @media (prefers-color-scheme: dark) {
+      .evre-rozeti { background: #173464; color: #b4ceff; }
+    }
+
+    .talep-metni {
+      margin: 0;
+      max-width: 66ch;
+      font-size: 1.04rem;
+    }
+
+    .durum-listesi {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 0.45rem 1rem;
+      margin: 0;
+    }
+
+    .durum-listesi dt { color: var(--soluk); }
+    .durum-listesi dd { margin: 0; font-weight: 650; overflow-wrap: anywhere; }
+
+    .siradaki-adim {
+      border-left: 0.4rem solid var(--vurgu);
+      background: linear-gradient(115deg, var(--yuzey), var(--yuzey-ikincil));
+    }
+
+    .siradaki-adim h2,
+    .kart h2,
+    .sonraki-dilim h2 { margin-top: 0; }
+
+    .eylem-komutu {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.9rem 1rem;
+      background: var(--metin);
+      color: var(--yuzey);
+      border-radius: 0.65rem;
+    }
+
+    .eylem-komutu code { color: inherit; }
+
+    .salt-okur-notu {
+      flex: none;
+      font-size: 0.78rem;
+      font-weight: 700;
+      opacity: 0.8;
+    }
+
+    .iki-sutun {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+    }
+
+    .alt-kart {
+      padding: 1rem;
+      background: var(--yuzey-ikincil);
+      border-radius: 0.75rem;
+    }
+
+    .alt-kart h3 { margin: 0 0 0.65rem; font-size: 1rem; }
+    .alt-kart p { margin: 0; }
+
+    .artefakt-listesi,
+    .yol-listesi,
+    .kriter-listesi,
+    .ihlal-listesi {
+      margin: 0;
+      padding-left: 1.25rem;
+    }
+
+    .artefakt-listesi li + li,
+    .yol-listesi li + li,
+    .kriter-listesi li + li { margin-top: 0.45rem; }
+
+    .sonraki-dilim { overflow: clip; }
+
+    .sonraki-dilim > summary {
+      cursor: pointer;
+      padding: 1.1rem 1.4rem;
+      font-weight: 750;
+      list-style-position: inside;
+      background: var(--yuzey-ikincil);
+    }
+
+    .sonraki-dilim[open] > summary { border-bottom: 1px solid var(--cizgi); }
+
+    .sonraki-dilim-icerigi { padding: clamp(1rem, 3vw, 1.5rem); }
+
+    .dilim-etiketi {
+      margin: 0 0 0.45rem;
+      color: var(--soluk);
+      font-size: 0.82rem;
+      font-weight: 750;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .alan-grubu {
+      padding-block: 1rem;
+      border-top: 1px solid var(--cizgi);
+    }
+
+    .alan-grubu:first-of-type { border-top: 0; padding-top: 0; }
+    .alan-grubu h3 { margin: 0 0 0.55rem; }
+    .alan-grubu p { margin: 0; }
+
+    .kriter {
+      padding: 0.85rem;
+      background: var(--yuzey-ikincil);
+      border-radius: 0.65rem;
+    }
+
+    .kriter-basligi {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .kriter-basligi strong { font-size: 0.95rem; }
+
+    pre {
+      max-width: 100%;
+      margin: 0.6rem 0 0;
+      padding: 0.85rem;
+      overflow-x: auto;
+      background: #101820;
+      color: #e7eef5;
+      border-radius: 0.55rem;
+      font-size: 0.82rem;
+    }
+
+    .rapor-seridi,
+    .yayin-durumu,
+    .uyari-karti {
+      padding: 0.95rem 1rem;
+      border-radius: 0.75rem;
+    }
+
+    .rapor-seridi {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+      background: var(--basari-zemin);
+      color: var(--basari);
+    }
+
+    .rapor-seridi p { margin: 0; }
+
+    .yayin-durumu {
+      margin-bottom: 1rem;
+      background: var(--uyari-zemin);
+      color: var(--uyari);
+      font-weight: 750;
+    }
+
+    .uyari-karti { background: var(--hata-zemin); color: var(--hata); }
+
+    .teyit-alani {
+      display: grid;
+      gap: 0.75rem;
+      margin-top: 1rem;
+      padding: 1rem;
+      border: 1px solid var(--cizgi);
+      border-radius: 0.75rem;
+    }
+
+    .teyit-alani legend { padding-inline: 0.4rem; font-weight: 750; }
+
+    .teyit-alani label { display: grid; gap: 0.35rem; font-weight: 650; }
+
+    .teyit-alani input,
+    .teyit-alani select {
+      width: 100%;
+      min-height: 2.75rem;
+      padding: 0.65rem 0.75rem;
+      border: 1px solid var(--cizgi);
+      border-radius: 0.5rem;
+      background: var(--zemin);
+      color: var(--metin);
+      font: inherit;
+    }
+
+    .birincil-dugme {
+      min-height: 2.8rem;
+      padding: 0.7rem 1rem;
+      border: 0;
+      border-radius: 0.55rem;
+      background: var(--vurgu);
+      color: #fff;
+      font: inherit;
+      font-weight: 750;
+    }
+
+    .birincil-dugme:disabled { cursor: not-allowed; opacity: 0.55; }
+
+    .onizleme-notu { margin: 0; color: var(--soluk); font-size: 0.88rem; }
+
+    .kaynak-notu {
+      padding-block: 0 2.5rem;
+      color: var(--soluk);
+      font-size: 0.85rem;
+    }
+
+    .kaynak-notu p { margin: 0.3rem 0; }
+
+    @media (max-width: 42rem) {
+      .sayfa-basligi { align-items: start; flex-direction: column; }
+      .okuma-durumu { text-align: left; }
+      .durum-ozeti,
+      .iki-sutun { grid-template-columns: 1fr; }
+      .eylem-komutu,
+      .rapor-seridi,
+      .kriter-basligi { align-items: flex-start; flex-direction: column; }
+      .birincil-dugme { width: 100%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; }
+    }
+  </style>
+</head>
+<body>
+  <a class="atlama-baglantisi" href="#ana-icerik">Ana içeriğe geç</a>
+
+  <header class="sayfa-basligi">
+    <div>
+      <p class="ust-baslik">A Şirketi · Etkileşim katmanı</p>
+      <h1>Increment durumu</h1>
+    </div>
+    <p class="okuma-durumu">
+      <span class="mod-rozeti">Salt-okur · 1. dilim</span><br>
+      Örnek veri · son okuma 15 Eylül 2026, 10:42
+    </p>
+  </header>
+
+  <main id="ana-icerik" class="sayfa-govdesi">
+    <section class="durum-ozeti" aria-labelledby="durum-basligi">
+      <div class="durum-ana">
+        <div class="durum-satiri">
+          <h2 id="durum-basligi" class="increment-kimligi">inc-001</h2>
+          <span class="evre-rozeti">Evre · sozlesme</span>
+        </div>
+        <p class="talep-metni">
+          Yerel salt-okur durum sayfası aktif increment’in evresini ve sıradaki tek adımı gösterir.
+        </p>
+      </div>
+
+      <div class="durum-ayrinti">
+        <dl class="durum-listesi">
+          <dt>Bekleyen onay</dt><dd>—</dd>
+          <dt>İnşaat motoru</dt><dd>—</dd>
+          <dt>Bekçi motoru</dt><dd>—</dd>
+          <dt>Son bekçi kararı</dt><dd>—</dd>
+        </dl>
+      </div>
+    </section>
+
+    <section class="kart siradaki-adim" aria-labelledby="siradaki-basligi">
+      <h2 id="siradaki-basligi">Sıradaki tek adım</h2>
+      <p>Talebi sözleşmeye dönüştürmek için sevk takımını insan başlatır.</p>
+      <div class="eylem-komutu" aria-label="Sıradaki komut">
+        <code>python3 bin/kos.py sistem-sevk</code>
+        <span class="salt-okur-notu">Bu dilim çalıştırmaz</span>
+      </div>
+    </section>
+
+    <section class="kart increment-ozeti" aria-labelledby="increment-ozeti-basligi">
+      <h2 id="increment-ozeti-basligi">Aktif increment özeti</h2>
+      <div class="iki-sutun">
+        <article class="alt-kart">
+          <h3>Kapsam sapması</h3>
+          <p>Yok</p>
+        </article>
+        <article class="alt-kart">
+          <h3>Son olay</h3>
+          <p><time datetime="2026-09-15T10:41:00+03:00">15 Eylül 2026 · 10:41</time><br>Talep açıldı.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="kart artefaktlar" aria-labelledby="artefakt-basligi">
+      <h2 id="artefakt-basligi">Artefaktlar</h2>
+      <p>Aktif increment klasöründe henüz dosya yok.</p>
+      <ul class="artefakt-listesi">
+        <li><code>increment/inc-001/</code> — boş</li>
+      </ul>
+    </section>
+
+    <details class="sonraki-dilim" open>
+      <summary>Sonraki dilimler · Kapı 1 sözleşme incelemesi</summary>
+      <div class="sonraki-dilim-icerigi">
+        <p class="dilim-etiketi">3. dilim ön izlemesi · örnek içerik</p>
+        <h2>Kapı 1 · Sözleşme onayı</h2>
+        <p>
+          Bu blok yalnız <code>bekleyen_onay=sozlesme</code> olduğunda karar yüzeyi olur.
+          Şimdilik salt-okur bir tasarım ön izlemesidir.
+        </p>
+
+        <section class="alan-grubu" aria-labelledby="hedef-basligi">
+          <h3 id="hedef-basligi">Hedef davranış</h3>
+          <p>Kullanıcı tarayıcıda aktif increment’in evresini, bekleyen onayı ve sıradaki tek adımı görür.</p>
+        </section>
+
+        <div class="iki-sutun alan-grubu">
+          <section>
+            <h3>Dokunulacak yollar</h3>
+            <ul class="yol-listesi">
+              <li><code>bin/uygulama.py</code></li>
+              <li><code>tests/test_uygulama.py</code></li>
+            </ul>
+          </section>
+          <section>
+            <h3>Yeni dosyalar</h3>
+            <ul class="yol-listesi">
+              <li><code>bin/uygulama.py</code></li>
+            </ul>
+          </section>
+        </div>
+
+        <section class="alan-grubu">
+          <h3>Motor adayı</h3>
+          <p><strong>codex</strong> · kesin seçim Kapı 1’de insandadır.</p>
+        </section>
+
+        <section class="alan-grubu">
+          <h3>Kabul kriterleri</h3>
+          <ol class="kriter-listesi">
+            <li class="kriter">
+              <div class="kriter-basligi">
+                <strong>Durum sayfası HTTP 200 döndürür.</strong>
+                <span class="tip-rozeti">komut</span>
+              </div>
+              <code>python3 -m unittest tests.test_uygulama</code>
+            </li>
+            <li class="kriter">
+              <div class="kriter-basligi">
+                <strong>Sunucu yalnız standart kütüphane kullanır.</strong>
+                <span class="tip-rozeti">dosya</span>
+              </div>
+              <code>bin/uygulama.py</code>
+            </li>
+          </ol>
+        </section>
+
+        <div class="iki-sutun alan-grubu">
+          <section>
+            <h3>Durma koşulu</h3>
+            <p>SoT alanları eksik veya şemaya aykırıysa yazma yapmadan dur.</p>
+          </section>
+          <section>
+            <h3>Kapsam dışı</h3>
+            <p>Uzak erişim, kimlik, POST eylemleri ve otomatik zincir.</p>
+          </section>
+        </div>
+
+        <section class="alan-grubu">
+          <h3>Yayın anlamı</h3>
+          <p>Salt-okur yerel durum sayfası doğrulanmış davranış olarak kullanılabilir olur.</p>
+        </section>
+
+        <fieldset class="teyit-alani" disabled>
+          <legend>Teyit alanı · ön izleme</legend>
+          <label>
+            İnşaat motoru
+            <select>
+              <option selected>codex</option>
+              <option>agy</option>
+              <option>grok</option>
+              <option>claude</option>
+            </select>
+          </label>
+          <label>
+            Onaylamak için increment kimliğini yazın
+            <input type="text" value="inc-001" aria-describedby="kapi-bir-notu">
+          </label>
+          <button class="birincil-dugme" type="button" disabled>Sözleşmeyi dondur ve onayla</button>
+          <p id="kapi-bir-notu" class="onizleme-notu">
+            Hedef: <strong>inc-001</strong> · evre: <strong>sozlesme</strong>. 1. dilimde eylemler devre dışıdır.
+          </p>
+        </fieldset>
+      </div>
+    </details>
+
+    <details class="sonraki-dilim" open>
+      <summary>Sonraki dilimler · Kapı 2 kanıt ve yayın incelemesi</summary>
+      <div class="sonraki-dilim-icerigi">
+        <p class="dilim-etiketi">4. dilim ön izlemesi · örnek PASS raporu</p>
+        <h2>Kapı 2 · Yayın kararı</h2>
+
+        <div class="rapor-seridi" role="status">
+          <p><strong>Bekçi kararı: PASS</strong><br>Denetleyen motor: grok</p>
+          <span class="sonuc-rozeti">2 / 2 kriter geçti</span>
+        </div>
+        <div class="yayin-durumu">Denetim geçti · henüz yayınlanmadı</div>
+
+        <div class="iki-sutun alan-grubu">
+          <section>
+            <h3>Onaylı sözleşme</h3>
+            <p><code>increment/inc-001/sozlesme.onayli.json</code></p>
+          </section>
+          <section>
+            <h3>Teslim</h3>
+            <p><code>increment/inc-001/teslim.json</code></p>
+          </section>
+        </div>
+
+        <section class="alan-grubu">
+          <h3>Kriter sonuçları ve kanıtlar</h3>
+          <ol class="kriter-listesi">
+            <li class="kriter kriter-sonucu">
+              <div class="kriter-basligi">
+                <strong>Durum sayfası HTTP 200 döndürür.</strong>
+                <span class="sonuc-rozeti">PASS</span>
+              </div>
+              <pre><code>python3 -m unittest tests.test_uygulama
+Ran 4 tests in 0.083s
+OK · çıkış kodu 0</code></pre>
+            </li>
+            <li class="kriter kriter-sonucu">
+              <div class="kriter-basligi">
+                <strong>Sunucu yalnız standart kütüphane kullanır.</strong>
+                <span class="sonuc-rozeti">PASS</span>
+              </div>
+              <pre><code>bin/uygulama.py mevcut; üçüncü taraf import bulunmadı.</code></pre>
+            </li>
+          </ol>
+        </section>
+
+        <div class="iki-sutun alan-grubu">
+          <section class="alt-kart">
+            <h3>İhlaller</h3>
+            <p>İhlal yok.</p>
+          </section>
+          <section class="alt-kart">
+            <h3>Kapsam sapması</h3>
+            <p>Rapor: yok · evre: yok</p>
+          </section>
+        </div>
+
+        <fieldset class="teyit-alani" disabled>
+          <legend>Yayın teyidi · ön izleme</legend>
+          <p>Karar: <strong>PASS</strong> · yayın durumu: <strong>bekliyor</strong></p>
+          <label>
+            Yayınlamak için increment kimliğini yazın
+            <input type="text" value="inc-001" aria-describedby="kapi-iki-notu">
+          </label>
+          <button class="birincil-dugme" type="button" disabled>PASS sonucunu yayınla</button>
+          <p id="kapi-iki-notu" class="onizleme-notu">
+            Hedef: <strong>inc-001</strong> · beklenen evre: <strong>yayin-bekliyor</strong>.
+            PASS tek başına yayın değildir; 1. dilimde eylemler devre dışıdır.
+          </p>
+        </fieldset>
+      </div>
+    </details>
+
+    <details class="kart gecmis">
+      <summary>Tüm geçmişi göster</summary>
+      <ol>
+        <li><time datetime="2026-09-15T10:41:00+03:00">15 Eylül 2026 · 10:41</time> — talep açıldı.</li>
+      </ol>
+    </details>
+  </main>
+
+  <footer class="kaynak-notu">
+    <p>Doğruluk kaynağı: <code>increment/evre.json</code> ve aktif <code>increment/&lt;id&gt;/</code> artefaktları.</p>
+    <p>Bu statik maket veri yazmaz, takım başlatmaz ve otomatik eylem üretmez.</p>
+  </footer>
+</body>
+</html>
