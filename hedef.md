@@ -30,7 +30,22 @@ zinciri **bir kez uçtan uca** işler: sözleşme şemaya uyar, inşaat sözleş
 verir, `kararlar.md`'ye satır düşer. Bu çizgi geçilmeden işletme takımı, otomatik zincir, zamanlayıcı ve
 yönetim uygulaması yazılmaz (bkz. `kapsam-disi.md`).
 
-## Sonrası (kadro tanımı değil, increment konusu)
-İşletme takımları (`is_tipi`: kod geliştirme, kod inceleme, araştırma/yazı, planlama), otomatik zincir,
-kuyruk/dosya tetiği, Telegram tetiği, zamanlanmış sabah/akşam koşusu, yönetim uygulaması, aynı işi birden fazla
-motora verip karşılaştırma. Her biri `sistem-sevk`in keseceği ayrı bir increment'tir.
+## Sonrası (kadro tanımı değil, increment konusu) — sıra önemli
+
+**1. Etkileşim katmanı — önce bu.** İnsan sistemle terminalden değil bir uygulamadan etkileşir; uygulamayı
+sistemin kendisi inşa eder. Çerçeve `toplantilar/2026-09-14-etkilesim-katmani/` toplantısında (agy, codex,
+grok) kilitlendi:
+- Uygulama ikinci bir sistem değil, `evre.json` + `increment/<id>/` artefaktlarının **insan yüzü**dür. Kendi
+  durumu, kuyruğu, evresi yoktur; her istekte dosyaları okur. Kapı mutasyonları `bin/kapi.py` alt süreç,
+  koşu `bin/kos.py <takim>` alt süreç; takım evreden türer, insan seçmez. Bir basış = bir koşu, bitince durur.
+- stdlib Python (`http.server`) + sunucu tarafı HTML + polling; bağımlılık yok. Önce `127.0.0.1`; uzak erişim
+  ve kimlik ayrı increment.
+- Kalıcı sınırlar: LLM çağırmaz, sohbet yüzeyi yok, takım seçici yok, otomatik zincir yok, dosya/SoT düzenleme
+  yok, commit/push yok, GET yazmaz.
+- Increment sırası: (1) salt-okur durum sayfası → (2) `talep` + `red` → (3) Kapı 1 (`onayla`, motor seçimi,
+  teyit) → (4) `POST /kos` + Kapı 2 → (5) uzak erişim + kimlik.
+
+**2. Sonra.** İşletme takımları (`is_tipi`: kod geliştirme, kod inceleme, araştırma/yazı, planlama), otomatik
+zincir, kuyruk/dosya tetiği, Telegram tetiği, zamanlanmış sabah/akşam koşusu, aynı işi birden fazla motora
+verip karşılaştırma. Etkileşim katmanı işler hâle gelmeden bunlara bakılmaz. Her biri `sistem-sevk`in
+keseceği ayrı bir increment'tir.

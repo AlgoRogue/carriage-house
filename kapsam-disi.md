@@ -8,8 +8,10 @@
 - 2026-09-14 · otomatik zincir / dağıtıcı: bir takımın bitişinin ötekini başlatması. Bugün her koşu insanın elinden çıkar.
 - 2026-09-14 · zamanlayıcı (systemd timer): sabah dağıtım, akşam denetim.
 - 2026-09-14 · kuyruk/dosya tetiği ve Telegram tetiği.
-- 2026-09-14 · yönetim uygulaması (evre, koşu ve rapor görüntüleme). Altyapı dosya tabanlı; uygulama sonra okur.
 - 2026-09-14 · aynı işi birden fazla motora paralel verip karşılaştırma.
+- 2026-09-15 · etkileşim katmanının **uzak/telefon erişimi ve kimlik doğrulaması** — yerel (127.0.0.1) katman kurulana kadar.
+  (Yönetim uygulaması maddesi 2026-09-15'te kapsama alındı; bkz. `hedef.md` → Sonrası. Toplantı:
+  `toplantilar/2026-09-14-etkilesim-katmani/`.)
 - 2026-09-14 · defter → yetenek (skills) öğrenme döngüsü.
 
 ## Kalıcı olarak dışarıda
