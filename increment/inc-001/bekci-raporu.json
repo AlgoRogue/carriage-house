@@ -1,0 +1,34 @@
+{
+  "increment_id": "inc-001",
+  "motor": "claude",
+  "karar": "PASS",
+  "kriterler": [
+    {
+      "aciklama": "Sunucu dosyası var; stdlib http.server ile yazılmış, kök dizin parametreyle verilebilir (testler sahte kök kullanır), host sabit 127.0.0.1 (bind adresi seçeneği yok).",
+      "sonuc": "PASS",
+      "kanit": "ls -la bin/uygulama.py → -rw-r--r-- 1 oguz oguz 6511 bin/uygulama.py (var). Kaynak: HOST=\"127.0.0.1\" sabit (satır 20), main() yalnız --port parametresi alıyor, bind adresi seçeneği yok; sunucu(kok, port) fonksiyonu kök dizini parametre olarak alıyor (satır 170-172)."
+    },
+    {
+      "aciklama": "Test dosyası var: sahte kökte port 0'da sunucu açar; GET / içinde increment id, evre, bekleyen onay, motorlar, sıradaki adım ve artefakt bağlantıları var; GET /artefakt/<ad> dosya içeriğini döner; .. içeren ad 404; POST/PUT/DELETE 405; isteklerden sonra evre.json ve artefaktlar değişmemiş.",
+      "sonuc": "PASS",
+      "kanit": "ls -la tests/test_uygulama.py → -rw-r--r-- 1 oguz oguz 5361 tests/test_uygulama.py (var). İçerik: SunucuTemeli.ac() port=0 ile sahte kökte sunucu açıyor; test_get_sayfa_alanlari_ve_baglantilar increment id/evre/bekleyen onay/motorlar/sıradaki adım/bağlantıları kontrol ediyor; test_artefakt_icerik_evre_json_ve_yol_siniri /artefakt/<ad> içeriği ve '..'/kaçış yollarında 404 kontrolü yapıyor; test_yazma_yontemleri_405_ve_dosyalar_ayni POST/PUT/DELETE→405 ve agac_ozet() ile dosya değişmediğini doğruluyor."
+    },
+    {
+      "aciklama": "Tüm testler geçer (ağ yok, motor yok; yalnız loopback).",
+      "sonuc": "PASS",
+      "kanit": "$ python3 -m unittest discover -s tests -v → 47 test çalıştı, tamamı 'ok' (test_uygulama.py'deki 3 test dahil: test_eksik_evre_bos_baglanti_yok, test_artefakt_icerik_evre_json_ve_yol_siniri, test_get_sayfa_alanlari_ve_baglantilar, test_yazma_yontemleri_405_ve_dosyalar_ayni). 'Ran 47 tests in 1.091s / OK', exit 0."
+    },
+    {
+      "aciklama": "bin/uygulama.py yalnız stdlib ve repo içi bin modüllerini içe alır; üçüncü parti bağımlılık yok.",
+      "sonuc": "PASS",
+      "kanit": "$ python3 -c \"import ast,sys; ... dış bağımlılık tespiti ...\" bin/uygulama.py üzerinde → çıktı boş (dış bağımlılık kümesi boş, print çalışmadı), exit 0."
+    },
+    {
+      "aciklama": "Canlı kontrol: sunucu 127.0.0.1:8765'te açılır, GET / HTML döner ve içinde 'inc-001' geçer, POST 405 alır, istek öncesi/sonrası increment/evre.json sha256 özeti aynı.",
+      "sonuc": "PASS",
+      "kanit": "$ python3 bin/uygulama.py --port 8765 & ... GET / içinde 'inc-001' ve '<html' bulundu; POST → HTTPError code=405; sha256sum increment/evre.json istek öncesi/sonrası: 98a0c2a741a58cec3a55507aa49ff0140d7dbac03b2fdcfc11c1ba643f6944f2 (birebir aynı, HASH_MATCH). Python betiği exit 0 (R=0)."
+    }
+  ],
+  "ihlal": [],
+  "kapsam_sapmasi": []
+}

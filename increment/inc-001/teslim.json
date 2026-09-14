@@ -1,0 +1,12 @@
+{
+  "increment_id": "inc-001",
+  "motor": "grok",
+  "diff_ozeti": "bin/uygulama.py: 127.0.0.1 stdlib HTTP salt-okur durum sayfası (önceki koşudan; bu koşuda değişmedi)\ntests/test_uygulama.py: sahte kök/port 0 testleri (önceki koşudan; bu koşuda değişmedi)\nREADME.md: komut tablosuna uygulama satırı (önceki koşudan; bu koşuda değişmedi)\ntakimlar/sistem-insaat/defter.md: teslim JSON dersi\ntakimlar/sistem-insaat/durum.json: son_kosu ve defter_son_ders",
+  "calistirilan_komutlar": [
+    "python3 -m unittest discover -s tests",
+    "python3 -c \"import ast,sys; a=ast.parse(open('bin/uygulama.py',encoding='utf-8').read()); m=set(); [m.update([al.name.split('.')[0] for al in n.names] if isinstance(n,ast.Import) else [(n.module or '').split('.')[0]]) for n in ast.walk(a) if isinstance(n,(ast.Import,ast.ImportFrom))]; d=m-set(sys.stdlib_module_names)-{'ayar','kapi','sema','motorlar',''}; print('dis bagimlilik:',d) if d else None; sys.exit(1 if d else 0)\"",
+    "python3 Popen(bin/uygulama.py --port 8765); GET / inc-001+html; POST 405; evre.json sha256 aynı"
+  ],
+  "yapilmayanlar": [],
+  "park_var": false
+}

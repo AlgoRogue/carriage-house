@@ -1,6 +1,6 @@
 {
   "increment_id": "inc-001",
-  "evre": "insaat",
+  "evre": "yayinlandi",
   "bekleyen_onay": null,
   "motor": {
     "insaat": "grok",
@@ -20,6 +20,18 @@
     {
       "zaman": "2026-09-15T00:15:34+03:00",
       "olay": "KAPI 1: sözleşme donduruldu · inşaat=grok · bekçi=claude"
+    },
+    {
+      "zaman": "2026-09-15T00:35:31+03:00",
+      "olay": "inşaat: teslim geçerli → bekçi"
+    },
+    {
+      "zaman": "2026-09-15T00:38:00+03:00",
+      "olay": "bekçi: PASS → KAPI 2 bekliyor"
+    },
+    {
+      "zaman": "2026-09-15T00:41:56+03:00",
+      "olay": "KAPI 2: yayınlandı"
     }
   ]
 }

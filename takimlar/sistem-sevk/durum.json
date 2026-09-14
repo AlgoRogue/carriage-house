@@ -6,7 +6,7 @@
   "kuyruk": [
     {
       "id": "inc-001",
-      "durum": "yapiliyor",
+      "durum": "tamam",
       "not": "127.0.0.1'de dinleyen stdlib HTTP sunucusu (bin/uygulama.py): GET / evre.json ve aktif increment artefaktlarından evre, bekleyen onay, kilitli motorlar, sıradaki adım ve artefakt bağlantılarını salt-okur HTML olarak gösterir; hiçbir yazma eylemi sunmaz"
     }
   ],

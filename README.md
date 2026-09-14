@@ -83,6 +83,7 @@ Ayrıntı ve ilk uçtan uca prova: [KURULUM.md](KURULUM.md).
 | `bin/kapi.py yayinla` | Kapı 2 — PASS'ı `kararlar.md`'ye işler, evreyi kapatır |
 | `bin/kapi.py red "…"` | Increment'i her evrede kapatır |
 | `bin/kapi.py durum` | Evre, bekleyen onay, motorlar, sıradaki komut |
+| `bin/uygulama.py [--port 8765]` | Salt-okur durum sayfası; yalnız 127.0.0.1, `GET /` |
 | `bin/kos.py <takim> [--kuru] [--zorla]` | Takımı bir kez koşturur; `--kuru` motor çağırmaz; `--zorla` günlük tavanı atlar |
 | `bin/bekci.py --dogrudan <takim> [kosu]` | Katman A'yı elle çalıştırır |
 | `bin/sema.py <şema> <dosya>` | JSON dosyasını dondurulmuş şemaya karşı doğrular |

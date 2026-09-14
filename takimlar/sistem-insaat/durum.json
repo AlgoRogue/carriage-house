@@ -1,10 +1,17 @@
 {
   "takim": "sistem-insaat",
-  "son_kosu": null,
-  "son_sonuc": null,
-  "son_motor": null,
+  "son_kosu": "2026-09-15T00:27:53+03:00",
+  "son_sonuc": "tamam",
+  "son_motor": "grok",
   "kuyruk": [],
-  "bekci": { "son_karar": null, "red_sayisi_7g": 0 },
-  "defter_son_ders": null,
-  "sayaclar": {}
+  "bekci": {
+    "son_karar": "kabul",
+    "red_sayisi_7g": 0,
+    "gerekce": "katman A temiz: kayıt dolu, gizli veri yok, korunan dosya değişmedi",
+    "zaman": "2026-09-15T00:35:31+03:00"
+  },
+  "defter_son_ders": "2026-09-15 · teslim JSON son cevap olarak dönmezse sürücü evreyi ilerletmez; çalışan dosyayı yeniden yazma, kriterleri çalıştır, son mesajı yalnız teslim şemasına uydur",
+  "sayaclar": {},
+  "son_sebep": null,
+  "son_oturum": "01a0a1d1-c335-7503-b908-400106abacac"
 }
