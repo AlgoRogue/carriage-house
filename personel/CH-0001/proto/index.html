@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="tr">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cengizhan — Sürücü mantık prototipi</title>
+<style>
+body{font:16px/1.55 system-ui,sans-serif;margin:32px auto;padding:0 20px;max-width:960px;background:#f5f7f8;color:#172b32}h1,h2{line-height:1.2}section{background:white;border:1px solid #ccd6d9;border-radius:10px;padding:22px;margin:20px 0}button{font:inherit;padding:9px 14px;margin:5px 8px 5px 0;border:1px solid #147969;border-radius:6px;background:white;color:#075d50;cursor:pointer}button:hover{background:#e7f3f0}button:disabled{opacity:.45;cursor:default}button[aria-selected=true]{background:#075d50;color:white}dt{font-weight:650}dd{margin:0 0 12px}code{font-size:.95em}.badge{font-weight:bold;color:#075d50}#notice{border-left:4px solid #147969;padding:10px;background:#edf6f3}li{margin:8px 0}small{display:block}pre{white-space:pre-wrap;overflow-wrap:anywhere}button:focus-visible{outline:3px solid #172b32;outline-offset:2px}
+</style>
+<header><div class="badge">PROTOTYPE / THROWAWAY — geçici keşif kodu</div>
+<h1>Cengizhan · Sürücü mantık prototipi</h1>
+<p>Cengizhan’ın kilitli durum makinesi, ilk dilim <code>bos → is_alindi → planlaniyor → plan_hazir → delege_hazirlaniyor → paket_hazir → park</code> yolunu sapmadan koşturuyor mu; durumu yalnız Sürücü mü yazıyor ve Motor yalnızca planlaniyor/delege_hazirlaniyor’da kavramsal mı?</p>
+<p>Düğmeler Sürücü temsilcisidir. Motor yalnızca planlama ve delege hazırlığında taklit edilir; çıktı veya hata sinyali üretir, hedef durum seçmez. İlk dilim parkta durur.</p></header>
+<section aria-labelledby="state-title"><h2 id="state-title">Şu anki durum</h2><div id="state" aria-live="polite"></div><p id="notice" role="status"></p></section>
+<section><h2>Serbest deneme</h2><p>Mevcut durumun izin verdiği geçişleri deneyin. Motor beklenirken ilerlemek için açıkça çıktı veya hata sinyali verin.</p><div id="actions"></div><button id="illegal">Yasadışı geçiş dene: doğrudan tamamla</button><button id="reset">Başa dön</button><p>Park → usta atandı geçişi kaynakta vardır; usta ataması henüz kurulu olmadığı için bu ilk dilimde kapalıdır.</p></section>
+<section><h2>Rehberli senaryolar</h2><div role="tablist" aria-label="Senaryolar" id="tabs"></div><div id="walkthrough" role="tabpanel"></div></section>
+<section><h2>Bu oturumdaki hareketler</h2><p>Yalnızca bellekte tutulur. Başa dönmek veya senaryo seçmek bu listeyi temizler.</p><ol id="history"></ol><details><summary>Gömülü kaynak iskeleti</summary><pre id="source"></pre></details></section>
+<script id="surucu-makine">
+// Portable pure module: no DOM, I/O, timers or persistence. Copy this block to lift it.
+const SurucuMakine = (() => {
+  const iskelet = {
+  "ajan": {
+    "personel_numarasi": "CH-0001",
+    "ad": "Cengizhan"
+  },
+  "kural": {
+    "sonraki_durumu_yalniz_surucu_yazar": true
+  },
+  "motor_cagrilan_durumlar": [
+    "planlaniyor",
+    "delege_hazirlaniyor"
+  ],
+  "durumlar": [
+    {
+      "id": "bos",
+      "aciklama": "İş yok, ajan boşta"
+    },
+    {
+      "id": "is_alindi",
+      "aciklama": "İnsan işi verdi, henüz işlenmedi"
+    },
+    {
+      "id": "planlaniyor",
+      "aciklama": "İş parçalara ayrılıyor (motor çağrılır)"
+    },
+    {
+      "id": "plan_hazir",
+      "aciklama": "Parçalama tamamlandı"
+    },
+    {
+      "id": "delege_hazirlaniyor",
+      "aciklama": "Delege paketi hazırlanıyor (motor çağrılır)"
+    },
+    {
+      "id": "paket_hazir",
+      "aciklama": "Delege paketi tamamlandı"
+    },
+    {
+      "id": "park",
+      "aciklama": "Paket, atanacak usta yokken burada bekler"
+    },
+    {
+      "id": "usta_atandi",
+      "aciklama": "Paket bir ustaya atandı"
+    },
+    {
+      "id": "izleniyor",
+      "aciklama": "Usta çalışıyor, ilerleme izleniyor"
+    },
+    {
+      "id": "tamam",
+      "aciklama": "İş, kabul ölçütünü karşılayarak bitti"
+    },
+    {
+      "id": "hata",
+      "aciklama": "Bir adımda hata oluştu"
+    }
+  ],
+  "gecisler": [
+    {
+      "from": "bos",
+      "to": "is_alindi",
+      "kosul": "İnsan işi verdi"
+    },
+    {
+      "from": "is_alindi",
+      "to": "planlaniyor",
+      "kosul": "Sürücü işi iş-parçalama motoruna yönlendirdi"
+    },
+    {
+      "from": "planlaniyor",
+      "to": "plan_hazir",
+      "kosul": "Motor parçalama çıktısını döndürdü"
+    },
+    {
+      "from": "plan_hazir",
+      "to": "delege_hazirlaniyor",
+      "kosul": "Sürücü sıradaki parçayı delege-paketi motoruna yönlendirdi"
+    },
+    {
+      "from": "delege_hazirlaniyor",
+      "to": "paket_hazir",
+      "kosul": "Motor delege paketini döndürdü"
+    },
+    {
+      "from": "paket_hazir",
+      "to": "park",
+      "kosul": "Atanacak usta yok (ilk prototipte iş burada durur)"
+    },
+    {
+      "from": "park",
+      "to": "usta_atandi",
+      "kosul": "Usta tanımlandı ve sürücü atamayı yaptı (henüz kurulu değil)"
+    },
+    {
+      "from": "usta_atandi",
+      "to": "izleniyor",
+      "kosul": "Usta işe başladı, sürücü izlemeye geçti"
+    },
+    {
+      "from": "izleniyor",
+      "to": "tamam",
+      "kosul": "Usta, paketin kabul ölçütünü karşıladı"
+    },
+    {
+      "from": "planlaniyor",
+      "to": "hata",
+      "kosul": "Motor çağrısı başarısız oldu"
+    },
+    {
+      "from": "delege_hazirlaniyor",
+      "to": "hata",
+      "kosul": "Motor çağrısı başarısız oldu"
+    },
+    {
+      "from": "izleniyor",
+      "to": "hata",
+      "kosul": "Usta kabul ölçütünü karşılayamadı"
+    },
+    {
+      "from": "hata",
+      "to": "park",
+      "kosul": "Sürücü hatayı park'a düşürüp yeniden denemeyi bekletir"
+    }
+  ],
+  "bilincli_disi": [
+    "kapi",
+    "defter",
+    "hafiza",
+    "motor_cagrisi",
+    "surucu_kodu"
+  ]
+};
+  const slice = new Set(['bos','is_alindi','planlaniyor','plan_hazir','delege_hazirlaniyor','paket_hazir','park','hata']);
+  // Motor targets come from the skeleton: each motor state's success (non-hata) transition.
+  const motorTargets = Object.fromEntries(iskelet.motor_cagrilan_durumlar.map(state => [state, iskelet.gecisler.find(t => t.from === state && t.to !== 'hata').to]));
+  const copy = value => JSON.parse(JSON.stringify(value));
+  function createMachine() {
+    let state = 'bos';
+    const getState = () => state;
+    const listLegalTransitions = () => copy(iskelet.gecisler.filter(t => t.from === state && slice.has(t.to)));
+    function move(to, motorSignal = false) {
+      const from = state;
+      if (!listLegalTransitions().some(t => t.to === to))
+        return {ok:false, from, to, state, message:'Geçiş reddedildi: iskelet veya ilk dilim bu geçişe izin vermiyor.'};
+      if (motorTargets[state] && !motorSignal)
+        return {ok:false, from, to, state, message:'Geçiş reddedildi: önce taklit Motor çıktısı veya hata sinyali gerekli.'};
+      state = to;
+      return {ok:true, from, to, state, message:'Durumu Sürücü yazdı.'};
+    }
+    function dispatch(action) {
+      if (action === 'motor_ciktisi' || action === 'motor_hatasi') {
+        if (!motorTargets[state]) return {ok:false, state, message:'Bu durumda Motor beklenmiyor; sinyal reddedildi.'};
+        // Motor supplies only a signal. The driver maps it to a fixed skeleton destination.
+        return move(action === 'motor_ciktisi' ? motorTargets[state] : 'hata', true);
+      }
+      return {ok:false, state, message:'Bilinmeyen sinyal reddedildi.'};
+    }
+    function reset() { state = 'bos'; return state; }
+    return Object.freeze({getState, listLegalTransitions, applyTransition:to => move(to), dispatch, reset});
+  }
+  return Object.freeze({createMachine, getSkeleton:() => copy(iskelet)});
+})();
+</script>
+<script>
+// Throwaway page: its handlers stand in for the driver; they only use the public API.
+const machine = SurucuMakine.createMachine();
+const skeleton = SurucuMakine.getSkeleton();
+const labels = {bos:'Boş',is_alindi:'İş alındı',planlaniyor:'Planlanıyor',plan_hazir:'Plan hazır',delege_hazirlaniyor:'Delege hazırlanıyor',paket_hazir:'Paket hazır',park:'Park',hata:'Hata'};
+const steps = {
+ is_alindi:['İşi al',{to:'is_alindi'}],
+ planlaniyor:['Planlamayı başlat',{to:'planlaniyor'}],
+ plan_hazir:['Motor çıktısı geldi',{signal:'motor_ciktisi'}],
+ delege_hazirlaniyor:['Delege paketini hazırlamayı başlat',{to:'delege_hazirlaniyor'}],
+ paket_hazir:['Motor çıktısı geldi',{signal:'motor_ciktisi'}],
+ park:['Parka al',{to:'park'}],
+ hata:['Motor hatası geldi',{signal:'motor_hatasi'}]
+};
+const scenarios = [
+ {title:'Mutlu yol → park',description:'İşi al, iki Motor çıktısını sırayla bildir ve paketi parka al. Her iki Motor durağında düğmeye basılana kadar durum bekler.',steps:['is_alindi','planlaniyor','plan_hazir','delege_hazirlaniyor','paket_hazir','park'].map(k=>steps[k])},
+ {title:'Yasadışı geçiş denemesi',description:'Boştayken doğrudan paket hazır durumuna atlamayı dene. Reddedilen işlem durumu değiştirmemeli; ardından normal iş alımı yapılabilmeli.',steps:[['Doğrudan paket hazır durumuna atla',{to:'paket_hazir',reject:true}],steps.is_alindi]},
+ {title:'Planlanıyor → hata',description:'Planlama sırasında Motor hata sinyali versin. Hata durumunu Sürücü yazsın ve ardından işi parkta bekletsin.',steps:[steps.is_alindi,steps.planlaniyor,steps.hata,steps.park]}
+];
+let selected = null, cursor = 0, history = [], notice = 'Başlangıç: ajan boşta.';
+const el = id => document.getElementById(id);
+function button(text, handler) {const b=document.createElement('button');b.textContent=text;b.onclick=handler;return b;}
+function run(action, guided=false) {
+ if (!guided) selected=null;
+ const before=machine.getState();
+ const result=action.signal ? machine.dispatch(action.signal) : machine.applyTransition(action.to);
+ notice=(result.ok?'Kabul edildi. ':'Reddedildi. ')+result.message;
+ history.push(`${result.ok?'Kabul':'Ret'} · ${labels[before]} → ${labels[machine.getState()]} · ${action.signal || action.to} · ${result.message}`);
+ if (guided && (action.reject ? !result.ok && before===machine.getState() : result.ok)) cursor++;
+ render();
+}
+function start(index) {machine.reset();selected=index;cursor=0;history=[];notice='Senaryo başlangıcı: ajan boşta.';render();}
+function render() {
+ const state=machine.getState(), motor=skeleton.motor_cagrilan_durumlar.includes(state);
+ el('state').replaceChildren();
+ const dl=document.createElement('dl');
+ for (const [name,value] of [['Durum',`${labels[state]} (${state})`],['Anlamı',skeleton.durumlar.find(s=>s.id===state).aciklama],['Durumu yazan','Yalnızca Sürücü (düğme işleyicileri)'],['Motor',motor?'Taklit sinyal bekleniyor; gerçek çağrı yok.':'Bu durumda çağrılmaz.'],['Beklenen sonraki adım',state==='park'?'İlk dilim bitti; usta ataması kapsam dışında.':state==='hata'?'Sürücü işi parka alır; otomatik yeniden deneme yok.':motor?'Motor çıktısı veya hata sinyalini bildir.':'Aşağıdaki yasal geçişlerden birini seç.']]) {
+ const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=name;dd.textContent=value;dl.append(dt,dd);
+ }
+ el('state').append(dl);el('notice').textContent=notice;
+ el('actions').replaceChildren();
+ for (const t of machine.listLegalTransitions()) {
+ const [title,action]=steps[t.to];const b=button(`${title} → ${labels[t.to]}`,()=>run(action));b.title=t.kosul;el('actions').append(b);
+ }
+ el('tabs').replaceChildren();
+ scenarios.forEach((s,i)=>{const b=button(s.title,()=>start(i));b.id=`tab-${i}`;b.setAttribute('role','tab');b.setAttribute('aria-selected',String(selected===i));b.setAttribute('aria-controls','walkthrough');b.onkeydown=e=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();const next=e.key==='Home'?0:e.key==='End'?scenarios.length-1:(i+(e.key==='ArrowRight'?1:scenarios.length-1))%scenarios.length;start(next);el(`tab-${next}`).focus();}};el('tabs').append(b);});
+ el('walkthrough').replaceChildren();
+ if(selected===null) {el('walkthrough').removeAttribute('aria-labelledby');el('walkthrough').textContent='Bir senaryo seçmek durumu başa alır. Serbest deneme, açık rehberi sonlandırır.';}
+ else {
+ const s=scenarios[selected];el('walkthrough').setAttribute('aria-labelledby',`tab-${selected}`);
+ const p=document.createElement('p');p.textContent=s.description;el('walkthrough').append(p);
+ const list=document.createElement('ol');s.steps.forEach(([title,action],i)=>{const li=document.createElement('li');const b=button((i<cursor?'✓ ':'')+title,()=>run(action,true));b.disabled=i!==cursor;li.append(b);list.append(li);});el('walkthrough').append(list);
+ if(cursor===s.steps.length){const p=document.createElement('p');p.textContent='Senaryo tamamlandı. Son durumu ve hareketleri inceleyin.';el('walkthrough').append(p);}
+ el('walkthrough').append(button('Bu senaryoyu yeniden başlat',()=>start(selected)));
+ }
+ el('history').replaceChildren();history.forEach(item=>{const li=document.createElement('li');li.textContent=item;el('history').append(li);});
+}
+el('reset').onclick=()=>{machine.reset();selected=null;cursor=0;history=[];notice='Başa dönüldü: ajan boşta.';render();};
+el('illegal').onclick=()=>run({to:'tamam'});
+el('source').textContent=JSON.stringify(skeleton,null,2);
+render();
+</script>
+</html>

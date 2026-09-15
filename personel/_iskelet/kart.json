@@ -1,0 +1,14 @@
+{
+  "personel_numarasi": "",
+  "on_yuz": {
+    "tur": "ajan",
+    "ad": "",
+    "referans_gorsel": null,
+    "birim": "",
+    "rol": ""
+  },
+  "arka_yuz": {
+    "skilller": [],
+    "motor": { "cli": "", "model": "" }
+  }
+}

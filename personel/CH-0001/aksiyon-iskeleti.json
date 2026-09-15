@@ -1,0 +1,39 @@
+{
+  "ajan": {
+    "personel_numarasi": "CH-0001",
+    "ad": "Cengizhan"
+  },
+  "kural": {
+    "sonraki_durumu_yalniz_surucu_yazar": true
+  },
+  "motor_cagrilan_durumlar": ["planlaniyor", "delege_hazirlaniyor"],
+  "durumlar": [
+    { "id": "bos", "aciklama": "İş yok, ajan boşta" },
+    { "id": "is_alindi", "aciklama": "İnsan işi verdi, henüz işlenmedi" },
+    { "id": "planlaniyor", "aciklama": "İş parçalara ayrılıyor (motor çağrılır)" },
+    { "id": "plan_hazir", "aciklama": "Parçalama tamamlandı" },
+    { "id": "delege_hazirlaniyor", "aciklama": "Delege paketi hazırlanıyor (motor çağrılır)" },
+    { "id": "paket_hazir", "aciklama": "Delege paketi tamamlandı" },
+    { "id": "park", "aciklama": "Paket, atanacak usta yokken burada bekler" },
+    { "id": "usta_atandi", "aciklama": "Paket bir ustaya atandı" },
+    { "id": "izleniyor", "aciklama": "Usta çalışıyor, ilerleme izleniyor" },
+    { "id": "tamam", "aciklama": "İş, kabul ölçütünü karşılayarak bitti" },
+    { "id": "hata", "aciklama": "Bir adımda hata oluştu" }
+  ],
+  "gecisler": [
+    { "from": "bos", "to": "is_alindi", "kosul": "İnsan işi verdi" },
+    { "from": "is_alindi", "to": "planlaniyor", "kosul": "Sürücü işi iş-parçalama motoruna yönlendirdi" },
+    { "from": "planlaniyor", "to": "plan_hazir", "kosul": "Motor parçalama çıktısını döndürdü" },
+    { "from": "plan_hazir", "to": "delege_hazirlaniyor", "kosul": "Sürücü sıradaki parçayı delege-paketi motoruna yönlendirdi" },
+    { "from": "delege_hazirlaniyor", "to": "paket_hazir", "kosul": "Motor delege paketini döndürdü" },
+    { "from": "paket_hazir", "to": "park", "kosul": "Atanacak usta yok (ilk prototipte iş burada durur)" },
+    { "from": "park", "to": "usta_atandi", "kosul": "Usta tanımlandı ve sürücü atamayı yaptı (henüz kurulu değil)" },
+    { "from": "usta_atandi", "to": "izleniyor", "kosul": "Usta işe başladı, sürücü izlemeye geçti" },
+    { "from": "izleniyor", "to": "tamam", "kosul": "Usta, paketin kabul ölçütünü karşıladı" },
+    { "from": "planlaniyor", "to": "hata", "kosul": "Motor çağrısı başarısız oldu" },
+    { "from": "delege_hazirlaniyor", "to": "hata", "kosul": "Motor çağrısı başarısız oldu" },
+    { "from": "izleniyor", "to": "hata", "kosul": "Usta kabul ölçütünü karşılayamadı" },
+    { "from": "hata", "to": "park", "kosul": "Sürücü hatayı park'a düşürüp yeniden denemeyi bekletir" }
+  ],
+  "bilincli_disi": ["kapi", "defter", "hafiza", "motor_cagrisi", "surucu_kodu"]
+}

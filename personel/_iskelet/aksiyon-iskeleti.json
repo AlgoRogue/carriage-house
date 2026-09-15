@@ -1,0 +1,39 @@
+{
+  "ajan": {
+    "personel_numarasi": "",
+    "ad": ""
+  },
+  "kural": {
+    "sonraki_durumu_yalniz_surucu_yazar": true
+  },
+  "motor_cagrilan_durumlar": [],
+  "durumlar": [
+    { "id": "bos", "aciklama": "İş yok, ajan boşta" },
+    { "id": "is_alindi", "aciklama": "İş verildi, henüz işlenmedi" },
+    { "id": "planlaniyor", "aciklama": "_(yer tutucu — rol özel)_" },
+    { "id": "plan_hazir", "aciklama": "_(yer tutucu — rol özel)_" },
+    { "id": "delege_hazirlaniyor", "aciklama": "_(yer tutucu — rol özel)_" },
+    { "id": "paket_hazir", "aciklama": "_(yer tutucu — rol özel)_" },
+    { "id": "park", "aciklama": "İş, bir sonraki adım hazır olana kadar burada bekler" },
+    { "id": "usta_atandi", "aciklama": "_(yer tutucu — rol özel)_" },
+    { "id": "izleniyor", "aciklama": "_(yer tutucu — rol özel)_" },
+    { "id": "tamam", "aciklama": "İş, kabul ölçütünü karşılayarak bitti" },
+    { "id": "hata", "aciklama": "Bir adımda hata oluştu" }
+  ],
+  "gecisler": [
+    { "from": "bos", "to": "is_alindi", "kosul": "_(yer tutucu)_" },
+    { "from": "is_alindi", "to": "planlaniyor", "kosul": "_(yer tutucu)_" },
+    { "from": "planlaniyor", "to": "plan_hazir", "kosul": "_(yer tutucu)_" },
+    { "from": "plan_hazir", "to": "delege_hazirlaniyor", "kosul": "_(yer tutucu)_" },
+    { "from": "delege_hazirlaniyor", "to": "paket_hazir", "kosul": "_(yer tutucu)_" },
+    { "from": "paket_hazir", "to": "park", "kosul": "_(yer tutucu)_" },
+    { "from": "park", "to": "usta_atandi", "kosul": "_(yer tutucu)_" },
+    { "from": "usta_atandi", "to": "izleniyor", "kosul": "_(yer tutucu)_" },
+    { "from": "izleniyor", "to": "tamam", "kosul": "_(yer tutucu)_" },
+    { "from": "planlaniyor", "to": "hata", "kosul": "_(yer tutucu)_" },
+    { "from": "delege_hazirlaniyor", "to": "hata", "kosul": "_(yer tutucu)_" },
+    { "from": "izleniyor", "to": "hata", "kosul": "_(yer tutucu)_" },
+    { "from": "hata", "to": "park", "kosul": "_(yer tutucu)_" }
+  ],
+  "bilincli_disi": ["kapi", "defter", "hafiza", "motor_cagrisi", "surucu_kodu"]
+}
