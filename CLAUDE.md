@@ -39,6 +39,12 @@ tests/                python3 -m unittest discover -s tests — ağ yok, motor y
 - Bir takım için değişiklik istenirse önce `takim.md` (kaynak), sonra `agents_uret.py` `.claude/agents/`'ı üretir.
 - Yeni motor = `bin/motorlar/<ad>.py` (`YETENEK`, `komut`, `cozumle`) + `MOTORLAR`/`TERS_MOTOR` + test.
 
+## Agent skills
+- **Personel-scoped Sürücü** — code lives under `personel/<personel_numarasi>/bin/`, not repo root `bin/`.
+- **Issue tracker** — local markdown under `.scratch/`, no external tracker. See `docs/agents/issue-tracker.md`.
+- **Triage labels** — default five-role set (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+- **Domain docs** — single-context glossary at root `CONTEXT.md`, ADRs under `docs/adr/`. See `docs/agents/domain.md`.
+
 ## Yasaklar
 - `.env` okuma, açma, ekrana basma — anahtar yalnız süreç ortamından gelir
 - Ajan olarak commit/push/tag; sosyal hesaba yazma; mail; dış servise yazma
