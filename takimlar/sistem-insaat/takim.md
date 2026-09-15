@@ -20,7 +20,8 @@ iade eder.
 - `increment/<id>/sozlesme.onayli.json` — **tek** yetki kaynağı; `sozlesme.json` (taslak) değil
 - Yalnızca sözleşmedeki `dokunulacak_yollar` ve `yeni_dosyalar`
 - `sema/` ve mevcut takım iskeletleri — salt okunur referans; sözleşme demedikçe yeniden tasarlanmaz
-- `increment/evre.json.motor.insaat` — sen busun
+- `increment/evre.json.motor.insaat` — sen busun; `evre.json.deneme` > 0 ise `bekci-raporu.json` önceki denemenin
+  FAIL raporudur: önce ihlalleri gider, geçen kısmı yeniden yazma
 
 ## Koşu adımları
 1. `increment/evre.json`'u oku; evre `insaat` değilse üretme, koşu kaydına "engel" yaz, bitir.

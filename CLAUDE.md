@@ -1,18 +1,19 @@
 # A Şirketi
 
-> Farklı yapay zekâ CLI'larını (claude, agy, codex, grok) yöneten deterministik üst katman. Üç ajan sistemi
-> bir increment ileri götürür ve durur; yayın düğmesi insanda (iki kapı).
+> Farklı yapay zekâ CLI'larını (claude, agy, codex, grok) yöneten deterministik üst katman. İnsan işi verir,
+> üç ajan sistemi bir increment ileri götürür ve durur; insan sonda onaylar (`yayinla`) ya da revize eder.
 
 ## Ne bu
 - **sistem-sevk** — insanın tek cümlesini dondurulmuş increment sözleşmesine çevirir (`claude`).
 - **sistem-insaat** — onaylı sözleşmeyi koda işler; motor sözleşmeden gelir (`codex` varsayılan; agy/grok/claude).
 - **sistem-bekci** — sözleşmeye karşı kanıtla PASS/FAIL; motor üretenin tersi (`bin/motorlar/TERS_MOTOR`).
 - **sürücü** (`bin/kos.py`) — evre kontrolü, motor çözümü, şema zorlamalı çıktı, git ile kapsam ölçümü, evre geçişi.
-- **kapı** (`bin/kapi.py`) — insanın düğmeleri: `talep · onayla (Kapı 1) · yayinla (Kapı 2) · red · durum`.
+- **döngü** (`bin/dongu.py "<iş>"`) — insanın ana komutu: zinciri sonuna kadar götürür (FAIL'de 2 tekrar), LLM'siz.
+- **kapı** (`bin/kapi.py`) — insanın son kararı: `yayinla (commit) · revize "<not>" · red · durum` (+ `talep · onayla · yeniden` elle).
 - **bekçi katman A** (`bin/bekci.py`) — LLM'siz: boş kayıt, gizli veri, insanın dosyasına dokunma → red.
 
-Döngü: `kapi talep → kos sistem-sevk → kapi onayla → kos sistem-insaat → kos sistem-bekci → kapi yayinla`.
-Sürücü bir sonraki takımı asla kendisi başlatmaz.
+Döngü: `dongu.py "<iş>"` → sevk → onay (otomatik) → inşaat → bekçi → PASS'ta durur → insan `yayinla | revize | red`.
+`kos.py` tek koşu yapar, zinciri `dongu.py` kurar; ajan zincir kuramaz, evreyi yazamaz.
 
 ## Okuma sırası (her ajan, her koşuda)
 1. `ANAYASA.md` — değişmez çerçeve
@@ -24,7 +25,7 @@ Sürücü bir sonraki takımı asla kendisi başlatmaz.
 
 ## Klasör yapısı
 ```
-bin/                  kos.py · kapi.py · bekci.py · sema.py · ayar.py · agents_uret.py · motorlar/<ad>.py
+bin/                  dongu.py · kos.py · kapi.py · bekci.py · sema.py · ayar.py · uygulama.py · motorlar/<ad>.py
 sema/                 increment-sozlesmesi · teslim · bekci-raporu · evre (.schema.json) — dondurulmuş
 increment/            evre.json · <id>/{sozlesme.json, sozlesme.onayli.json, increment.md, teslim.json, park.md, bekci-raporu.json}
 takimlar/<takim>/     takim.md · kurallar.md · defter.md · durum.json · kosu/
@@ -43,4 +44,4 @@ tests/                python3 -m unittest discover -s tests — ağ yok, motor y
 - Ajan olarak commit/push/tag; sosyal hesaba yazma; mail; dış servise yazma
 - Para harcama — abonelik, satın alma, tavan dışı ücretli çağrı
 - `ANAYASA.md`, `hedef.md`, `kararlar.md`, `kapsam-disi.md`, `sema/`, `kurallar.md`, `sozlesme.onayli.json`,
-  `bin/kapi.py` değiştirme — hepsi insanındır
+  `bin/kapi.py`, `bin/dongu.py` değiştirme — hepsi insanındır

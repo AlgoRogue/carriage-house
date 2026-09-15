@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 """Kapı — insanın düğmeleri. LLM çağırmaz, motor başlatmaz; yalnız `increment/evre.json`'u ve
-kapı dosyalarını yazar. Evreyi ilerleten iki şey vardır: bu betik (insan) ve `bin/kos.py`
-(artefakt doğrulaması). Ajan evreyi yazamaz.
+kapı dosyalarını yazar. Evreyi ilerleten üç şey vardır: bu betik (insan), `bin/dongu.py` (insan adına
+zinciri kuran otomat) ve `bin/kos.py` (artefakt doğrulaması). Ajan evreyi yazamaz.
+
+Günlük kullanımda insan yalnız üçünü kullanır: `talep` (bin/dongu.py bunu kendisi yapar), `yayinla`, `revize`.
 
   python3 bin/kapi.py talep "<tek cümle>"        yeni increment aç (evre: sozlesme) → sırada sistem-sevk
-  python3 bin/kapi.py onayla [--motor grok]      KAPI 1: taslak sözleşmeyi dondur (sozlesme.onayli.json,
-                                                 salt-okunur), inşaat/bekçi motorunu kilitle → sistem-insaat
-  python3 bin/kapi.py yayinla                    KAPI 2: PASS'ı SoT'a işle (kararlar.md), evreyi kapat
+  python3 bin/kapi.py onayla [--motor grok]      taslak sözleşmeyi dondur (sozlesme.onayli.json, salt-okunur),
+                                                 inşaat/bekçi motorunu kilitle → sistem-insaat (dongu otomatik yapar)
+  python3 bin/kapi.py yeniden                    bekçi FAIL sonrası aynı sözleşmeyle inşaata dön (deneme +1)
+  python3 bin/kapi.py revize "<not>"             insanın notuyla sözleşmeye dön: sevk notu okuyup yeniden keser
+  python3 bin/kapi.py yayinla                    İNSAN ONAYI: PASS'ı SoT'a işle (kararlar.md), git commit, evreyi kapat
   python3 bin/kapi.py red "<sebep>"              increment'i her evrede kapat; sebep geçmişe düşer
   python3 bin/kapi.py durum                      evre, bekleyen onay, motorlar, son bekçi kararı
 
@@ -16,6 +20,7 @@ import json
 import os
 import re
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -73,7 +78,8 @@ def talep(cumle, kok=None):
     id_ = sonraki_id(kok)
     ayar.increment_klasoru(id_, kok).mkdir(parents=True, exist_ok=True)
     ayar.evre_guncelle({"increment_id": id_, "evre": "sozlesme", "bekleyen_onay": None,
-                        "motor": {"insaat": None, "bekci": None}, "talep": cumle, "kapsam_sapmasi": []},
+                        "motor": {"insaat": None, "bekci": None}, "talep": cumle, "kapsam_sapmasi": [],
+                        "deneme": 0, "revizyon": []},
                        f"talep: {cumle}", kok)
     _sevk_kuyruguna(kok, id_, cumle)
     return 0, f"{id_} açıldı (evre: sozlesme). Sıradaki: python3 bin/kos.py sistem-sevk"
@@ -108,8 +114,21 @@ def onayla(motor=None, kok=None):
                f"Sıradaki: python3 bin/kos.py sistem-insaat")
 
 
+def _commit(kok, mesaj):
+    """`git add -A && git commit` — insanın onayıyla (yayinla) çalışır. Git yoksa ya da değişiklik yoksa sessiz."""
+    kok = str(kok or KOK)
+    try:
+        subprocess.run(["git", "add", "-A"], cwd=kok, capture_output=True, timeout=60)
+        sonuc = subprocess.run(["git", "commit", "-q", "-m", mesaj], cwd=kok, capture_output=True, text=True, timeout=60)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return f"commit atılamadı: {exc}"
+    if sonuc.returncode != 0:
+        return "commit yok: " + (sonuc.stdout or sonuc.stderr).strip()[:200]
+    return "commit atıldı"
+
+
 def yayinla(kok=None):
-    """KAPI 2."""
+    """İNSAN ONAYI: PASS'ı SoT'a işler, commit atar, evreyi kapatır."""
     evre = ayar.evre_oku(kok)
     if evre["bekleyen_onay"] != "yayin" or evre["evre"] != "yayin-bekliyor":
         return 1, f"yayınlanacak PASS yok (evre: {evre['evre']}, bekleyen: {evre['bekleyen_onay'] or '-'})."
@@ -126,8 +145,43 @@ def yayinla(kok=None):
                         f"{sozlesme['yayin_anlami']} (inşaat: {evre['motor']['insaat']}, "
                         f"bekçi: {evre['motor']['bekci']})")
     _sevk_kuyrugunu_kapat(kok, id_, "tamam")
-    ayar.evre_guncelle({"evre": "yayinlandi", "bekleyen_onay": None}, "KAPI 2: yayınlandı", kok)
-    return 0, f"KAPI 2 geçti. {id_} kararlar.md'ye işlendi. Yeni increment: python3 bin/kapi.py talep \"…\""
+    ayar.evre_guncelle({"evre": "yayinlandi", "bekleyen_onay": None}, "İNSAN ONAYI: yayınlandı", kok)
+    ozet = sozlesme["hedef_davranis"].split(";")[0].split(". ")[0][:72]
+    commit = _commit(kok, f"{id_}: {ozet}\n\ninşaat: {evre['motor']['insaat']} · bekçi: {evre['motor']['bekci']} · "
+                          f"deneme: {evre.get('deneme', 0)}")
+    return 0, f"Onaylandı. {id_} kararlar.md'ye işlendi; {commit}. Yeni iş: python3 bin/dongu.py \"…\""
+
+
+def yeniden(kok=None):
+    """Bekçi FAIL → aynı onaylı sözleşmeyle inşaata dön; rapor inşaatın önünde durur."""
+    evre = ayar.evre_oku(kok)
+    if evre["evre"] != "fail":
+        return 1, f"yeniden yalnız `fail` evresinde (şu an: {evre['evre']})."
+    deneme = int(evre.get("deneme") or 0) + 1
+    ayar.evre_guncelle({"evre": "insaat", "bekleyen_onay": None, "deneme": deneme},
+                       f"yeniden: inşaata dönüldü (deneme {deneme})", kok)
+    return 0, f"{evre['increment_id']} inşaata döndü (deneme {deneme}). Sıradaki: python3 bin/kos.py sistem-insaat"
+
+
+def revize(notu, kok=None):
+    """İnsanın notuyla sözleşmeye dön: sevk notu okuyup yeniden keser. Onaylı kopya kaldırılır."""
+    evre = ayar.evre_oku(kok)
+    if evre["evre"] in ("bos", "yayinlandi", "red"):
+        return 1, "açık increment yok — yeni iş: python3 bin/dongu.py \"…\""
+    notu = (notu or "").strip()
+    if not notu:
+        return 1, "revize notu boş — ne değişsin, tek cümle yaz."
+    klasor = ayar.increment_klasoru(evre["increment_id"], kok)
+    onayli = klasor / "sozlesme.onayli.json"
+    if onayli.exists():
+        os.chmod(onayli, 0o644)
+        onayli.unlink()
+    revizyon = [*(evre.get("revizyon") or []), {"zaman": ayar.simdi_iso(), "not": notu}]
+    ayar.evre_guncelle({"evre": "sozlesme", "bekleyen_onay": None, "motor": {"insaat": None, "bekci": None},
+                        "kapsam_sapmasi": [], "deneme": 0, "revizyon": revizyon},
+                       f"revize ({evre['evre']} evresinde): {notu}", kok)
+    _sevk_kuyruguna(kok, evre["increment_id"], f"REVİZE: {notu} (talep: {evre.get('talep')})")
+    return 0, f"{evre['increment_id']} sözleşmeye döndü; sevk notu okuyacak. Sıradaki: python3 bin/dongu.py --devam"
 
 
 def red(sebep, kok=None):
@@ -161,14 +215,19 @@ def durum(kok=None):
             except ValueError:
                 satirlar.append("bekçi: rapor bozuk")
     sonraki = {"sozlesme": "python3 bin/kos.py sistem-sevk", "insaat": "python3 bin/kos.py sistem-insaat",
-               "bekci": "python3 bin/kos.py sistem-bekci", "yayin-bekliyor": "python3 bin/kapi.py yayinla",
-               "fail": "python3 bin/kapi.py red \"…\"  (ya da sözleşmeyi düzeltip yeniden onayla)"}
+               "bekci": "python3 bin/kos.py sistem-bekci",
+               "yayin-bekliyor": "İNSAN KARARI — python3 bin/kapi.py yayinla | python3 bin/kapi.py revize \"…\"",
+               "fail": "İNSAN KARARI — python3 bin/kapi.py yeniden | revize \"…\" | red \"…\""}
+    if evre.get("deneme"):
+        satirlar.append(f"deneme: {evre['deneme']}")
+    if evre.get("revizyon"):
+        satirlar.append("revize notu: " + evre["revizyon"][-1]["not"])
     if evre["bekleyen_onay"] == "sozlesme":
         satirlar.append("sıradaki: python3 bin/kapi.py onayla [--motor …]")
     elif evre["evre"] in sonraki:
         satirlar.append("sıradaki: " + sonraki[evre["evre"]])
     else:
-        satirlar.append("sıradaki: python3 bin/kapi.py talep \"…\"")
+        satirlar.append("sıradaki: python3 bin/dongu.py \"…\"")
     if evre["gecmis"]:
         son = evre["gecmis"][-1]
         satirlar.append(f"son olay: {son['zaman']} — {son['olay']}")
@@ -187,6 +246,10 @@ def main(argv):
         kod, mesaj = onayla(motor)
     elif komut == "yayinla":
         kod, mesaj = yayinla()
+    elif komut == "yeniden":
+        kod, mesaj = yeniden()
+    elif komut == "revize":
+        kod, mesaj = revize(" ".join(gerisi))
     elif komut == "red":
         kod, mesaj = red(" ".join(gerisi))
     elif komut == "durum":

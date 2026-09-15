@@ -6,7 +6,7 @@
   2. Koşu kaydında gizli veri deseni (API anahtarı, token, e-posta) var mı → red.
   3. İnsanın dosyalarına koşu sırasında dokunulmuş mu (mtime > koşu başlangıcı) → red.
      İnsanın dosyaları: ANAYASA.md · hedef.md · kararlar.md · kapsam-disi.md · sema/ · takimlar/*/kurallar.md ·
-     increment/*/sozlesme.onayli.json · bin/kapi.py
+     increment/*/sozlesme.onayli.json · bin/kapi.py · bin/dongu.py
 
 Katman B (sözleşmeye karşı PASS/FAIL, LLM, ters motor) bir takımdır: `takimlar/sistem-bekci`.
 
@@ -40,7 +40,7 @@ ON_KONTROL = {
 }
 # İnsanın dosyaları — glob desenleri (ANAYASA §5)
 KORUNAN = ["ANAYASA.md", "hedef.md", "kararlar.md", "kapsam-disi.md", "sema/*.json",
-           "takimlar/*/kurallar.md", "increment/*/sozlesme.onayli.json", "bin/kapi.py"]
+           "takimlar/*/kurallar.md", "increment/*/sozlesme.onayli.json", "bin/kapi.py", "bin/dongu.py"]
 
 
 def _oku(yol, varsayilan=""):

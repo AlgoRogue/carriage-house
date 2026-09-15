@@ -138,7 +138,8 @@ def durum_guncelle(takim, yama, kok=None):
 # --- increment/evre.json (ANAYASA 2: tek aktif increment) -------------------
 
 BOS_EVRE = {"increment_id": None, "evre": "bos", "bekleyen_onay": None,
-            "motor": {"insaat": None, "bekci": None}, "talep": None, "kapsam_sapmasi": [], "gecmis": []}
+            "motor": {"insaat": None, "bekci": None}, "talep": None, "kapsam_sapmasi": [], "deneme": 0,
+            "revizyon": [], "gecmis": []}
 
 
 def evre_yolu(kok=None):

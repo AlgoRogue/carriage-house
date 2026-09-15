@@ -18,6 +18,7 @@ KOK = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(KOK / "bin"))
 import ayar  # noqa: E402
 import bekci  # noqa: E402
+import dongu  # noqa: E402
 import kapi  # noqa: E402
 import kos  # noqa: E402
 from test_sema import RAPOR, SOZLESME, TESLIM  # noqa: E402
@@ -276,3 +277,86 @@ class BekciKatmanA(KosTemeli):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SiraliMotor:
+    """Ardışık koşulara sırayla farklı yanıt verir (sevk → inşaat → bekçi …)."""
+
+    def __init__(self, yanitlar):
+        self.yanitlar, self.cagrilar = list(yanitlar), []
+
+    def __call__(self, komut, cwd=None, env=None, **_):
+        self.cagrilar.append((env["SIRKET_TAKIM"], komut[0]))
+        yanit = self.yanitlar.pop(0) if self.yanitlar else {}
+        Path(env["SIRKET_KOSU"]).write_text("# Koşu\n\nokudum, ürettim.\n", encoding="utf-8")
+        metin = json.dumps(yanit, ensure_ascii=False)
+        if komut[0] == "codex":  # her motor kendi biçiminde cevap verir
+            cikti = "\n".join(json.dumps(o) for o in [
+                {"type": "thread.started", "thread_id": "t1"},
+                {"type": "item.completed", "item": {"type": "agent_message", "text": metin}},
+                {"type": "turn.completed"}])
+        elif komut[0] == "agy":
+            cikti = json.dumps({"status": "SUCCESS", "num_turns": 1, "response": metin, "structured_output": yanit})
+        else:  # claude ve grok
+            cikti = json.dumps({"is_error": False, "total_cost_usd": 0.1, "num_turns": 1, "result": metin, "text": metin})
+        return mock.Mock(stdout=cikti, stderr="", returncode=0)
+
+
+class Dongu(KosTemeli):
+    def _dongu(self, motor, **kw):
+        with mock.patch.object(kos.subprocess, "run", motor), redirect_stdout(io.StringIO()) as cikti:
+            kod = dongu.dongu(kok=self.kok, **kw)
+        return kod, cikti.getvalue()
+
+    def test_talepten_pass_a_kadar_tek_komut(self):
+        m = SiraliMotor([{**SOZLESME, "increment_id": "inc-001"},
+                         {**TESLIM, "increment_id": "inc-001", "motor": "codex"},
+                         {**RAPOR, "increment_id": "inc-001", "motor": "claude"}])
+        kod, cikti = self._dongu(m, talep="kapi.py durum evreyi bassın")
+        self.assertEqual(kod, 0, cikti)
+        self.assertEqual([c[0] for c in m.cagrilar], ["sistem-sevk", "sistem-insaat", "sistem-bekci"])
+        self.assertEqual([c[1] for c in m.cagrilar], ["claude", "codex", "claude"])
+        evre = ayar.evre_oku(self.kok)
+        self.assertEqual((evre["evre"], evre["bekleyen_onay"]), ("yayin-bekliyor", "yayin"))
+        self.assertIn("İNSAN KARARI", cikti)
+        self.assertEqual(kapi.yayinla(self.kok)[0], 0)
+
+    def test_fail_sonrasi_yeniden_dener_sonra_durur(self):
+        fail = {**RAPOR, "increment_id": "inc-001", "motor": "claude", "karar": "FAIL"}
+        teslim = {**TESLIM, "increment_id": "inc-001", "motor": "codex"}
+        m = SiraliMotor([{**SOZLESME, "increment_id": "inc-001"}, teslim, fail, teslim, fail, teslim,
+                         {**RAPOR, "increment_id": "inc-001", "motor": "claude"}])
+        kod, cikti = self._dongu(m, talep="x", maks_deneme=2)
+        self.assertEqual(kod, 0, cikti)
+        self.assertEqual(ayar.evre_oku(self.kok)["deneme"], 2)
+        self.assertEqual(sum(1 for c in m.cagrilar if c[0] == "sistem-insaat"), 3)
+
+    def test_deneme_tavaninda_insana_birakir(self):
+        fail = {**RAPOR, "increment_id": "inc-001", "motor": "claude", "karar": "FAIL"}
+        teslim = {**TESLIM, "increment_id": "inc-001", "motor": "codex"}
+        m = SiraliMotor([{**SOZLESME, "increment_id": "inc-001"}, teslim, fail, teslim, fail])
+        kod, cikti = self._dongu(m, talep="x", maks_deneme=1)
+        self.assertEqual(kod, 1)
+        self.assertEqual(ayar.evre_oku(self.kok)["evre"], "fail")
+        self.assertIn("İNSAN KARARI", cikti)
+        self.assertEqual(kapi.revize("daralt", self.kok)[0], 0)
+        self.assertEqual(ayar.evre_oku(self.kok)["evre"], "sozlesme")
+
+    def test_sevk_sozlesme_uretmezse_durur(self):
+        m = SiraliMotor([{"increment_id": "inc-001", "hedef_davranis": "eksik"}])
+        kod, cikti = self._dongu(m, talep="x")
+        self.assertEqual(kod, 1)
+        self.assertEqual(len(m.cagrilar), 1)
+        self.assertIn("sevk sözleşme üretmedi", cikti)
+
+    def test_insaat_istemi_fail_raporunu_gosterir(self):
+        kapi.talep("x", self.kok)
+        evre = ayar.evre_guncelle({"evre": "insaat", "deneme": 1, "motor": {"insaat": "codex", "bekci": "claude"}}, "t", self.kok)
+        fm = ayar.takim_bilgisi("sistem-insaat", self.kok)
+        metin = kos.istem("sistem-insaat", fm, self.kok / "k.md", "z", evre, self.kok)
+        self.assertIn("2. deneme", metin)
+        self.assertIn("bekci-raporu.json", metin)
+        evre = ayar.evre_guncelle({"evre": "sozlesme", "revizyon": [{"zaman": "t", "not": "CSS de olsun"}]}, "r", self.kok)
+        metin = kos.istem("sistem-sevk", ayar.takim_bilgisi("sistem-sevk", self.kok), self.kok / "k.md", "z", evre, self.kok)
+        self.assertIn("REVİZE NOTU", metin)
+        self.assertIn("CSS de olsun", metin)

@@ -1,8 +1,9 @@
 # A Şirketi
 
 Farklı yapay zekâ CLI'larını — **claude, agy, codex, grok** — yöneten deterministik bir üst katman.
-Üç ajan (sözleşme kes · inşa et · ölç), iki insan kapısı, dosya tabanlı durum. Ajanlar bir içerik üretmez;
-**bu sistemin kendisini** bir increment ileri götürür ve durur. Yayın düğmesi insanda.
+Üç ajan (sözleşme kes · inşa et · ölç), dosya tabanlı durum. İnsan işi verir, sistem sonuna kadar götürür,
+insan sonda **onaylar ya da revize eder**. Ajanlar bir içerik üretmez; **bu sistemin kendisini** bir increment
+ileri götürür ve durur.
 
 > Sentezin kilit cümlesi: çekirdek kadro A Şirketi'ni *kullanan* üç bakanlık değildir; A Şirketi'ni
 > *üreten* üç kilittir — sözleşme kes, bir increment inşa et, sözleşmeye karşı ölç, insan yayınlasın.
@@ -22,25 +23,25 @@ Her takım `takimlar/<takim>/` altında aynı dört dosyayla yaşar: `takim.md` 
 ## Döngü
 
 ```
-sen        python3 bin/kapi.py talep "sistemin sıradaki çalışan parçası: <tek davranış>"
-                    │  evre: sozlesme
-           python3 bin/kos.py sistem-sevk         claude → sozlesme.json (şema zorlamalı, sürücü yazar)
-                    │  bekleyen_onay: sozlesme
-sen        python3 bin/kapi.py onayla [--motor grok]    ── KAPI 1: sozlesme.onayli.json (salt-okunur), motor kilidi
-                    │  evre: insaat
-           python3 bin/kos.py sistem-insaat       sözleşme motoru → kod + teslim.json; sürücü git farkını ölçer
-                    │  evre: bekci (+ kapsam_sapmasi)
-           python3 bin/kos.py sistem-bekci        ters motor → bekci-raporu.json PASS|FAIL
-                    │  yayin-bekliyor | fail
-sen        python3 bin/kapi.py yayinla                  ── KAPI 2: kararlar.md'ye satır, evre kapanır
+sen        python3 bin/dongu.py "sistemin sıradaki çalışan parçası: <tek davranış>" [--motor grok]
+                    │  talep → evre: sozlesme
+           sistem-sevk    (claude)          → sozlesme.json (şema zorlamalı, sürücü yazar)
+           onayla         (otomatik)        → sozlesme.onayli.json, inşaat/bekçi motoru kilitlenir
+           sistem-insaat  (sözleşme motoru) → kod + teslim.json; sürücü git farkını ölçer
+           sistem-bekci   (ters motor)      → bekci-raporu.json PASS | FAIL
+                    │  FAIL → yeniden (en fazla 2): inşaat raporu okuyup düzeltir
+                    ▼  PASS → durur
+sen        python3 bin/kapi.py yayinla            → kararlar.md satırı, git commit, evre kapanır
+           python3 bin/kapi.py revize "<not>"     → sevk notu okuyup yeniden keser; dongu.py --devam
+           python3 bin/kapi.py red "<sebep>"      → kapanır
 ```
 
-Sürücü hiçbir koşuda bir sonraki takımı kendisi başlatmaz; her koşu senin elinden çıkar. Evreyi yalnız
-`bin/kos.py` (artefakt geçerliyse) ve `bin/kapi.py` (sen) ilerletir; ajan evreyi yazamaz.
+Arada onay yok; karar sonda. `bin/kos.py` tek koşu yapar; zinciri `bin/dongu.py` (LLM'siz otomat) kurar.
+Evreyi yalnız `kos.py` (artefakt geçerliyse), `dongu.py` ve `kapi.py` (sen) ilerletir; ajan evreyi yazamaz.
 
 ## Deterministik olan ne
 
-- **Motor seçimi** takım dosyasında değil kuralda: `motor: claude` (sabit) · `sozlesme` (Kapı 1'de kilitlenen) ·
+- **Motor seçimi** takım dosyasında değil kuralda: `motor: claude` (sabit) · `sozlesme` (onayda kilitlenen) ·
   `ters` (`bin/motorlar/TERS_MOTOR`). Aynı sözleşme her zaman aynı motora gider.
 - **Yapısal çıktı** dört CLI'nin şema bayrağıyla zorlanır (`--json-schema` / `--output-schema`); dosyayı sürücü
   yazar, `bin/sema.py` doğrular. Ajanın "dosyayı doğru yere yazması"na güvenilmez.
@@ -68,7 +69,7 @@ tests/                ağsız, motor çağrısız: python3 -m unittest discover 
 git clone <repo> a-sirketi && cd a-sirketi
 cp .env.example .env                      # motorlar kendi oturumunu kullanır; anahtar gerekmez
 which claude agy codex grok               # dördü de yolda olmalı (en azından claude + bir tane daha)
-python3 -m unittest discover -s tests     # 43 test, ağ yok, para yok
+python3 -m unittest discover -s tests     # ağ yok, para yok
 python3 bin/kapi.py durum                 # evre: bos
 python3 bin/kos.py sistem-sevk --kuru     # istemi ve evre kararını basar, motor çağırmaz
 ```
@@ -78,10 +79,13 @@ Ayrıntı ve ilk uçtan uca prova: [KURULUM.md](KURULUM.md).
 
 | Komut | Ne yapar |
 |---|---|
-| `bin/kapi.py talep "…"` | Yeni increment açar (`inc-NNN`), evre `sozlesme` |
-| `bin/kapi.py onayla [--motor X]` | Kapı 1 — taslağı dondurur, inşaat/bekçi motorunu kilitler |
-| `bin/kapi.py yayinla` | Kapı 2 — PASS'ı `kararlar.md`'ye işler, evreyi kapatır |
+| `bin/dongu.py "…" [--motor X] [--deneme N]` | **Ana komut** — işi açar, sevk→onay→inşaat→bekçi zincirini sonuna kadar götürür |
+| `bin/dongu.py --devam` | Mevcut evreden sürdürür (revize sonrası, ya da kesilen döngü) |
+| `bin/kapi.py yayinla` | İnsan onayı — `kararlar.md`'ye işler, **git commit**, evreyi kapatır |
+| `bin/kapi.py revize "…"` | Notunla sözleşmeye döner; sevk yeniden keser |
+| `bin/kapi.py yeniden` | FAIL sonrası aynı sözleşmeyle inşaata dön (dongu bunu otomatik yapar) |
 | `bin/kapi.py red "…"` | Increment'i her evrede kapatır |
+| `bin/kapi.py talep "…"` · `onayla` | Elle adım adım (dongu bunları kendisi yapar) |
 | `bin/kapi.py durum` | Evre, bekleyen onay, motorlar, sıradaki komut |
 | `bin/uygulama.py [--port 8765]` | Salt-okur durum sayfası; yalnız 127.0.0.1, `GET /` |
 | `bin/kos.py <takim> [--kuru] [--zorla]` | Takımı bir kez koşturur; `--kuru` motor çağırmaz; `--zorla` günlük tavanı atlar |
@@ -91,10 +95,9 @@ Ayrıntı ve ilk uçtan uca prova: [KURULUM.md](KURULUM.md).
 
 ## Kapsam dışı (şimdilik)
 
-İşletme takımları (kod geliştirme, inceleme, araştırma, planlama), otomatik zincir, zamanlayıcı, Telegram
-tetiği, yönetim uygulaması, çoklu-motor karşılaştırma. Hepsi `kapsam-disi.md`'de tarihli; döngü bir kez
-uçtan uca işlemeden hiçbiri yazılmaz (ANAYASA §5, evre kilidi). Eski içerik şirketi `icerik-sirketi-v1`
-etiketinde duruyor.
+İşletme takımları (kod geliştirme, inceleme, araştırma, planlama), zamanlayıcı, Telegram tetiği,
+çoklu-motor karşılaştırma. Hepsi `kapsam-disi.md`'de tarihli; etkileşim katmanı (`bin/uygulama.py`, sırası
+`hedef.md`'de) işler hâle gelmeden hiçbiri yazılmaz. Eski içerik şirketi `icerik-sirketi-v1` etiketinde.
 
 ## Lisans
 

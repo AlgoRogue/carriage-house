@@ -4,12 +4,15 @@ A Şirketi, farklı yapay zekâ CLI'larını (claude, agy, codex, grok) yöneten
 Her ajan koşuya başlamadan önce bu dosyayı, sonra `sirket/AJAN-KIMLIGI.md`'yi, sonra `hedef.md`, `kararlar.md`,
 `kapsam-disi.md`'yi, sonra kendi takımının `kurallar.md` dosyasını okur. Anayasa insanındır: ajan değiştiremez.
 
-## 1 · Yayın düğmesi insanın — iki kapı
+## 1 · İnsan işi verir, sonunda karar verir — arada onay yok
 
-Döngü: `insan talebi → sistem-sevk (sözleşme) → KAPI 1 → sistem-insaat → sistem-bekci → KAPI 2`.
-Kapı 1 sözleşmeyi dondurur (`sozlesme.onayli.json`); Kapı 2 yayınlar (`kararlar.md`'ye işler, evreyi kapatır).
-İkisi de yalnız insanındır (`bin/kapi.py`). Bekçinin PASS'ı yayın değildir; dosyayı canlı sözleşme yapmaz,
-motor rotasını varsayılan kılmaz, işletme takımı açmaz. Hiçbir ajan commit, push, tag atmaz; dış servise yazmaz.
+Döngü: `insan işi verir (bin/dongu.py) → sistem-sevk (sözleşme) → otomatik onay → sistem-insaat → sistem-bekci
+→ PASS ise durur | FAIL ise inşaat düzeltir (en fazla 2 tekrar) → İNSAN: yayinla | revize | red`.
+Sistem verilen işi sonuna kadar götürür; ara adımda insana sormaz. İnsan kararı **sonda**dır: `yayinla`
+(kararlar.md'ye işler, commit atar, evreyi kapatır), `revize "<not>"` (sevk notu okuyup yeniden keser, döngü
+baştan koşar), `red`. Sözleşmeyi dondurma (`sozlesme.onayli.json`) otomatiktir; insan isterse `--motor` ile
+inşaat motorunu seçer. Bekçinin PASS'ı yayın değildir: insan onaylamadan hiçbir şey commit'lenmez, canlı
+sayılmaz. Hiçbir ajan commit, push, tag atmaz; dış servise yazmaz — commit yalnız `yayinla` ile, insanın eliyle.
 
 ## 2 · Tek aktif increment, kapsam sözleşmede
 
@@ -36,15 +39,15 @@ Tur tavanı destekleyen motorda uygulanır. Takım başına günde 6 koşu; şir
 Maliyet raporlamayan motorun koşusu kayda "motor raporlamıyor" notuyla girer; sessizce sıfır sayılmaz.
 Tavana çarpan koşu bunu `durum.json`'a yazar; sessizce durmaz, "bitti" demez.
 Her koşu `SIRKET_KOSU` yoluna kayıt yazar: ne okundu, ne üretildi, ne kaldı. Kayıtsız koşu reddedilir.
-Sürücü hiçbir zaman bir sonraki takımı kendisi başlatmaz; her koşu insanın elinden çıkar.
+Sürücü (`bin/kos.py`) tek koşu yapar ve bir sonraki takımı kendisi başlatmaz; zinciri `bin/dongu.py` kurar —
+o da LLM değil, insanın verdiği tek işi adım adım yürüten deterministik otomattır. Ajan zincir kuramaz.
 
 ## 5 · İnsanın dosyaları, ajanın defteri
 
 İnsanın dosyaları — ajan dokunamaz, sözleşme listelese bile: `ANAYASA.md`, `hedef.md`, `kararlar.md`,
-`kapsam-disi.md`, `sema/`, `takimlar/*/kurallar.md`, `increment/*/sozlesme.onayli.json`, `bin/kapi.py`.
+`kapsam-disi.md`, `sema/`, `takimlar/*/kurallar.md`, `increment/*/sozlesme.onayli.json`, `bin/kapi.py`, `bin/dongu.py`.
 Katman A koşu sırasında değişeni yakalar.
 Ajan `defter.md`'ye ders yazar; kural önerisini deftere yazar, uygulamaz.
 Takımlar birbirine mesaj atmaz, birbirinin klasörüne yazmaz; aralarındaki tek köprü `increment/<id>/`
-klasöründeki artefaktlar ve `evre.json`'dur. Evreyi yalnız sürücü (artefakt doğrulaması) ve insan (kapı) ilerletir.
-Evre kilidi: döngü uçtan uca bir kez işlemeden işletme takımı yazılmaz; `evre.json` şeması dondurulmadan
-otomatik zincir yazılmaz; ilk PASS+yayın olmadan ikinci increment "işletme takımı kur" olamaz.
+klasöründeki artefaktlar ve `evre.json`'dur. Evreyi yalnız sürücü (artefakt doğrulaması), döngü otomatı ve insan (kapi.py) ilerletir.
+Evre kilidi: etkileşim katmanı işler hâle gelmeden işletme takımı yazılmaz; aynı anda tek aktif increment vardır.

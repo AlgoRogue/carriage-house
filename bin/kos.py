@@ -136,9 +136,15 @@ def _increment_baglami(takim, evre, kok=None):
     klasor = f"increment/{id_}"
     satirlar = [f"Aktif increment: `{id_}` · evre: `{evre.get('evre')}` · klasör: `{klasor}/`",
                 f"İnsanın talebi: {evre.get('talep') or '-'}"]
+    if takim == "sistem-sevk" and evre.get("revizyon"):
+        satirlar.append("İNSAN REVİZE NOTU (önceki sözleşme `" + klasor + "/sozlesme.json`, notu uygulayarak yeniden kes): "
+                        + evre["revizyon"][-1]["not"])
     if takim == INSAAT:
         satirlar.append(f"Onaylı sözleşme: `{klasor}/sozlesme.onayli.json` — yalnız orada yazan yollara dokun; "
                         f"inşaat motoru: {evre.get('motor', {}).get('insaat')}")
+        if int(evre.get("deneme") or 0) > 0:
+            satirlar.append(f"Bu {evre['deneme'] + 1}. deneme: önceki inşaat bekçiden FAIL aldı. Önce "
+                            f"`{klasor}/bekci-raporu.json`'daki ihlalleri ve FAIL kriterlerini gider; geçen kısmı yeniden yazma.")
     elif takim == "sistem-bekci":
         satirlar.append(f"Onaylı sözleşme: `{klasor}/sozlesme.onayli.json` (inşaat kopyası değil) · "
                         f"teslim: `{klasor}/teslim.json` · diff: `git diff` ve `git status --porcelain`")

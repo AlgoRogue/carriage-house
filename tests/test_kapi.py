@@ -22,6 +22,11 @@ def sahte_kok(tmp):
     shutil.copytree(KOK / "sema", kok / "sema")
     (kok / "kararlar.md").write_text("# Kararlar\n", encoding="utf-8")
     (kok / "increment").mkdir()
+    import subprocess
+    subprocess.run(["git", "init", "-q"], cwd=kok, check=True)
+    subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "ilk"],
+                   cwd=kok, check=True)
+    (kok / ".git" / "config").open("a").write("[user]\n\tname = t\n\temail = t@t\n")
     return kok
 
 
@@ -90,6 +95,12 @@ class KapiAkisi(unittest.TestCase):
         ayar.evre_guncelle({"evre": "yayin-bekliyor", "bekleyen_onay": "yayin"}, "sahte bekçi PASS", self.kok)
         kod, mesaj = kapi.yayinla(self.kok)
         self.assertEqual(kod, 0, mesaj)
+        self.assertIn("commit atıldı", mesaj)
+        import subprocess
+        log = subprocess.run(["git", "log", "--oneline"], cwd=self.kok, capture_output=True, text=True).stdout
+        self.assertIn(id_, log.splitlines()[0])
+        self.assertEqual(subprocess.run(["git", "status", "--porcelain"], cwd=self.kok, capture_output=True,
+                                        text=True).stdout.strip(), "", "yayından sonra ağaç temiz")
         self.assertEqual(ayar.evre_oku(self.kok)["evre"], "yayinlandi")
         kararlar = (self.kok / "kararlar.md").read_text(encoding="utf-8")
         self.assertIn(id_, kararlar)
@@ -118,13 +129,44 @@ class KapiAkisi(unittest.TestCase):
         self.assertEqual(ayar.durum_oku("sistem-sevk", self.kok)["kuyruk"][0]["durum"], "red")
 
     def test_durum_siradaki_adimi_soyler(self):
-        self.assertIn("kapi.py talep", kapi.durum(self.kok)[1])
+        self.assertIn("dongu.py", kapi.durum(self.kok)[1])
         kapi.talep("x", self.kok)
         self.assertIn("kos.py sistem-sevk", kapi.durum(self.kok)[1])
         self._taslak_yaz()
         self.assertIn("kapi.py onayla", kapi.durum(self.kok)[1])
         kapi.onayla(None, self.kok)
         self.assertIn("kos.py sistem-insaat", kapi.durum(self.kok)[1])
+
+    def test_yeniden_fail_evresinden_insaata(self):
+        self.assertEqual(kapi.yeniden(self.kok)[0], 1)
+        kapi.talep("x", self.kok)
+        self._taslak_yaz()
+        kapi.onayla(None, self.kok)
+        ayar.evre_guncelle({"evre": "fail"}, "sahte FAIL", self.kok)
+        kod, mesaj = kapi.yeniden(self.kok)
+        self.assertEqual(kod, 0, mesaj)
+        evre = ayar.evre_oku(self.kok)
+        self.assertEqual((evre["evre"], evre["deneme"]), ("insaat", 1))
+        self.assertEqual(evre["motor"]["insaat"], "codex", "motor kilidi korunur")
+
+    def test_revize_sozlesmeye_doner_notu_saklar(self):
+        self.assertEqual(kapi.revize("x", self.kok)[0], 1)
+        kapi.talep("x", self.kok)
+        id_, klasor = self._taslak_yaz()
+        kapi.onayla(None, self.kok)
+        ayar.evre_guncelle({"evre": "yayin-bekliyor", "bekleyen_onay": "yayin", "deneme": 1}, "sahte PASS", self.kok)
+        self.assertEqual(kapi.revize("  ", self.kok)[0], 1)
+        kod, mesaj = kapi.revize("CSS de olsun", self.kok)
+        self.assertEqual(kod, 0, mesaj)
+        evre = ayar.evre_oku(self.kok)
+        self.assertEqual((evre["evre"], evre["bekleyen_onay"], evre["deneme"]), ("sozlesme", None, 0))
+        self.assertEqual(evre["motor"], {"insaat": None, "bekci": None})
+        self.assertEqual(evre["revizyon"][-1]["not"], "CSS de olsun")
+        self.assertFalse((klasor / "sozlesme.onayli.json").exists(), "onaylı kopya kalkar")
+        self.assertTrue((klasor / "sozlesme.json").exists(), "taslak kalır")
+        self.assertIn("REVİZE", ayar.durum_oku("sistem-sevk", self.kok)["kuyruk"][-1]["not"])
+        import sema
+        self.assertEqual(sema.dogrula(sema.yukle("evre", KOK), json.loads(ayar.evre_yolu(self.kok).read_text())), [])
 
     def test_evre_dosyasi_semaya_uyar(self):
         import sema

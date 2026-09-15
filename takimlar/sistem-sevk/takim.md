@@ -23,6 +23,8 @@ kararı dondurmak, kapsamı kilitlemek.
 - `sema/increment-sozlesmesi.schema.json` — çıktının şeması
 - Varsa önceki increment'in `bekci-raporu.json`'u (`increment/inc-*/`) — FAIL sebebi bir sonraki sözleşmeyi daraltır
 - `takimlar/sistem-sevk/durum.json` kuyruğu: `bekliyor` madde = insanın talebi; `son_red` varsa önce onu oku
+- `increment/evre.json.revizyon` doluysa insan önceki sözleşmeyi/sonucu revize etmiş: notu uygula, sözleşmeyi
+  daralt/düzelt ve yeniden kes; `sozlesme.json` önceki taslaktır
 
 ## Koşu adımları
 1. `increment/evre.json`'u oku. Evre `sozlesme` değilse ya da `increment_id` boşsa hiçbir şey üretme; koşu

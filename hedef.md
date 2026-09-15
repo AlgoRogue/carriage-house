@@ -22,13 +22,12 @@ motor seçimiyle doldurulur — rastgele değil, Kapı 1'de kilitlenerek.
 | `sistem-insaat` | Onaylı sözleşmeyi koda işler; başka ürün yazmaz | sözleşmeden (codex varsayılan; agy, grok, istisnai claude) |
 | `sistem-bekci` | Increment'in sözleşme kadar çalıştığını PASS/FAIL eder; yamamaz | üretenin tersi |
 
-İnsan: sistemin amacı, increment seçimi, Kapı 1 (sözleşme), Kapı 2 (yayın).
+İnsan: sistemin amacı, işi vermek (`bin/dongu.py "<iş>"`), sonda karar (`yayinla` / `revize` / `red`). Arada onay yok.
 
 ## Bitiş çizgisi (increment 0'ın kabul kriteri)
-`kapi.py talep → kos.py sistem-sevk → kapi.py onayla → kos.py sistem-insaat → kos.py sistem-bekci → kapi.py yayinla`
-zinciri **bir kez uçtan uca** işler: sözleşme şemaya uyar, inşaat sözleşme dışına çıkmaz, bekçi kanıtla PASS
-verir, `kararlar.md`'ye satır düşer. Bu çizgi geçilmeden işletme takımı, otomatik zincir, zamanlayıcı ve
-yönetim uygulaması yazılmaz (bkz. `kapsam-disi.md`).
+`dongu.py "<iş>" → sevk → onay → inşaat → bekçi → yayinla` zinciri **bir kez uçtan uca** işler: sözleşme şemaya
+uyar, inşaat sözleşme dışına çıkmaz, bekçi kanıtla PASS verir, `kararlar.md`'ye satır düşer.
+**Geçildi: 2026-09-15, inc-001** (salt-okur durum sayfası; inşaat grok, bekçi claude).
 
 ## Sonrası (kadro tanımı değil, increment konusu) — sıra önemli
 
@@ -36,14 +35,15 @@ yönetim uygulaması yazılmaz (bkz. `kapsam-disi.md`).
 sistemin kendisi inşa eder. Çerçeve `toplantilar/2026-09-14-etkilesim-katmani/` toplantısında (agy, codex,
 grok) kilitlendi:
 - Uygulama ikinci bir sistem değil, `evre.json` + `increment/<id>/` artefaktlarının **insan yüzü**dür. Kendi
-  durumu, kuyruğu, evresi yoktur; her istekte dosyaları okur. Kapı mutasyonları `bin/kapi.py` alt süreç,
-  koşu `bin/kos.py <takim>` alt süreç; takım evreden türer, insan seçmez. Bir basış = bir koşu, bitince durur.
+  durumu, kuyruğu, evresi yoktur; her istekte dosyaları okur. İnsan eylemleri `bin/kapi.py` / `bin/dongu.py`
+  alt süreç; uygulama zinciri kendisi kurmaz, `dongu.py`'yi başlatır ve evreyi izler.
 - stdlib Python (`http.server`) + sunucu tarafı HTML + polling; bağımlılık yok. Önce `127.0.0.1`; uzak erişim
   ve kimlik ayrı increment.
-- Kalıcı sınırlar: LLM çağırmaz, sohbet yüzeyi yok, takım seçici yok, otomatik zincir yok, dosya/SoT düzenleme
-  yok, commit/push yok, GET yazmaz.
-- Increment sırası: (1) salt-okur durum sayfası → (2) `talep` + `red` → (3) Kapı 1 (`onayla`, motor seçimi,
-  teyit) → (4) `POST /kos` + Kapı 2 → (5) uzak erişim + kimlik.
+- Kalıcı sınırlar: LLM çağırmaz, sohbet yüzeyi yok, takım seçici yok, dosya/SoT düzenleme yok, GET yazmaz;
+  commit yalnız `yayinla` üzerinden.
+- Increment sırası: (1) salt-okur durum sayfası ✅ → (2) "yeni iş" (`dongu.py` arka planda) + evre izleme →
+  (3) sonda karar: `yayinla` / `revize` / `red` (sözleşme, teslim, bekçi raporu kanıtlarıyla) → (4) tasarım
+  (codex maketi, CSS) → (5) uzak erişim + kimlik.
 
 **2. Sonra.** İşletme takımları (`is_tipi`: kod geliştirme, kod inceleme, araştırma/yazı, planlama), otomatik
 zincir, kuyruk/dosya tetiği, Telegram tetiği, zamanlanmış sabah/akşam koşusu, aynı işi birden fazla motora

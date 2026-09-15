@@ -17,16 +17,16 @@ kez etkileşimli girip oturum aç). Sürücü anahtar yönetmez; `.env` yalnız 
 ## Adım 2 · Ayakta mı
 
 ```bash
-python3 -m unittest discover -s tests      # 43 test — ağ yok, motor yok, para yok
+python3 -m unittest discover -s tests      # ağ yok, motor yok, para yok
 python3 bin/ayar.py                        # tavanlar, evre: bos, .env var mı
-python3 bin/kapi.py durum                  # "sıradaki: python3 bin/kapi.py talep …"
+python3 bin/kapi.py durum                  # "sıradaki: python3 bin/dongu.py …"
 python3 bin/kos.py sistem-sevk --kuru      # evre bos → "ATLANIR"; istemi yine de basar
 ```
 
 ## Adım 3 · İnsanın dosyalarını oku (ve gerekiyorsa değiştir)
 
 Bunlar senindir, ajan dokunamaz: `ANAYASA.md`, `hedef.md`, `kararlar.md`, `kapsam-disi.md`, `sema/`,
-`takimlar/*/kurallar.md`, `bin/kapi.py`. Tavanları `bin/ayar.py` başındaki sabitlerden değiştirirsin
+`takimlar/*/kurallar.md`, `bin/kapi.py`, `bin/dongu.py`. Tavanları `bin/ayar.py` başındaki sabitlerden değiştirirsin
 (15 dk, 2 USD, 6 koşu/gün, 10 USD/gün). Motor tersini `bin/motorlar/__init__.py` içindeki `TERS_MOTOR`'dan.
 
 ## Adım 4 · Kuru prova — motor çağırmadan bütün evreleri gör
@@ -39,32 +39,24 @@ python3 bin/kos.py sistem-insaat --kuru    # ATLANIR — evre insaat değil (do�
 python3 bin/kapi.py red "kuru prova"       # evreyi kapat
 ```
 
-## Adım 5 · İlk gerçek döngü (para harcar: her koşu bir CLI çağrısı)
+## Adım 5 · Gerçek döngü (para harcar: her adım bir CLI çağrısı)
 
-Talep küçük olsun — bitiş çizgisi "döngü bir kez uçtan uca işledi"dir, büyük özellik değil.
+Tek komut. İş küçük ve tek davranış olsun.
 
 ```bash
-python3 bin/kapi.py talep "kapi.py durum komutu son üç geçmiş olayını da bassın"
-
-python3 bin/kos.py sistem-sevk            # claude → increment/inc-001/sozlesme.json + increment.md
-cat increment/inc-001/increment.md        # 1 dakikada oku
-python3 bin/kapi.py onayla                # KAPI 1 — motor_adayi'nı kabul; ya da --motor grok
-python3 bin/kapi.py durum                 # evre: insaat · motor: inşaat=codex bekçi=claude
-
-python3 bin/kos.py sistem-insaat          # codex → kod + teslim.json; kapsam sapması ölçülür
-cat increment/inc-001/teslim.json
-git diff --stat                           # inşaatın gerçekten dokunduğu dosyalar
-
-python3 bin/kos.py sistem-bekci           # claude → bekci-raporu.json PASS|FAIL
-cat increment/inc-001/bekci-raporu.json
-
-python3 bin/kapi.py yayinla               # KAPI 2 — kararlar.md'ye satır; evre: yayinlandi
-git add -A && git commit -m "inc-001: …"  # commit senin işin; ajan commit atmaz
+python3 bin/dongu.py "kapi.py durum komutu son üç geçmiş olayını da bassın"   # [--motor grok] [--deneme 2]
+#   → sevk (claude) sözleşme keser → otomatik onay → inşaat (codex) → bekçi (claude)
+#   → FAIL ise inşaat raporu okuyup düzeltir (en fazla 2 tekrar) → PASS ise durur, "İNSAN KARARI" der
+cat increment/inc-00N/increment.md            # ne yapıldı (1 dakika)
+cat increment/inc-00N/bekci-raporu.json       # kanıtlar
+python3 bin/kapi.py yayinla                   # onay: kararlar.md satırı + git commit + evre kapanır
+#   ya da
+python3 bin/kapi.py revize "CSS de olsun"     # notunla sözleşmeye döner; sonra: python3 bin/dongu.py --devam
+python3 bin/kapi.py red "vazgeçtim"           # kapatır
 ```
 
-FAIL gelirse: `kapi.py red "…"` ile kapat ve yeni talep aç, ya da `sozlesme.json`'u düzeltip
-(`chmod 644 increment/inc-001/sozlesme.onayli.json` gerekmez — taslağı düzeltirsin) evreyi elle `sozlesme`'ye
-alıp yeniden onayla. `red` sebebi `takimlar/sistem-sevk/durum.json`'a düşer; sevk bir sonraki koşuda okur.
+Döngü 5-30 dk sürer; terminali bloklar. Arkaya atmak için `nohup python3 bin/dongu.py "…" > /tmp/dongu.log &`,
+evreyi `python3 bin/kapi.py durum` ya da `python3 bin/uygulama.py` → http://127.0.0.1:8765 ile izle.
 
 ## Motor duman testi (isteğe bağlı, ücretli)
 
@@ -94,7 +86,7 @@ EOF
 | Belirti | Sebep / çözüm |
 |---|---|
 | `atlandı — evre uyuşmuyor` | Takım yanlış evrede çağrıldı. `kapi.py durum` sıradaki komutu söyler. |
-| `atlandı — motor çözülemedi` | `motor: sozlesme`/`ters` ama Kapı 1 geçilmemiş; ya da bilinmeyen motor adı. |
+| `atlandı — motor çözülemedi` | `motor: sozlesme`/`ters` ama sözleşme onaylanmamış; ya da bilinmeyen motor adı. |
 | `son_sonuc: gecersiz` | Motor JSON döndürdü ama şemaya uymuyor; `durum.json.son_sebep` hatayı yazar. Sevk'i yeniden koştur. |
 | `son_sonuc: red` | Katman A: boş kayıt, gizli veri ya da korunan dosyaya dokunma; ya da sevk/bekçi klasörü dışına yazdı. |
 | `son_sonuc: hata` | Motor başlatılamadı, süre aştı ya da koşu kaydı yazılmadı; koşu kaydının sonunda ham çıktı var. |

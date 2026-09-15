@@ -1,33 +1,137 @@
 {
-  "$comment": "increment/evre.json — tek aktif increment'in evre makinesi. Yalnız bin/kapi.py (insan) ve bin/kos.py (artefakt doğrulaması) yazar; ajan yazmaz.",
+  "$comment": "increment/evre.json — tek aktif increment'in evre makinesi. Yalnız bin/kapi.py, bin/dongu.py (insan) ve bin/kos.py (artefakt doğrulaması) yazar; ajan yazmaz.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["increment_id", "evre", "bekleyen_onay", "motor", "talep", "gecmis"],
+  "required": [
+    "increment_id",
+    "evre",
+    "bekleyen_onay",
+    "motor",
+    "talep",
+    "gecmis"
+  ],
   "properties": {
-    "increment_id": {"type": ["string", "null"]},
-    "evre": {"type": "string",
-             "enum": ["bos", "sozlesme", "insaat", "bekci", "yayin-bekliyor", "fail", "yayinlandi", "red"],
-             "description": "bos: talep yok · sozlesme: sevk çalışır · insaat: inşaat çalışır · bekci: bekçi çalışır · yayin-bekliyor: Kapı 2 · fail: bekçi FAIL, insan karar verir · yayinlandi/red: kapalı"},
-    "bekleyen_onay": {"type": ["string", "null"], "enum": [null, "sozlesme", "yayin"]},
+    "increment_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "evre": {
+      "type": "string",
+      "enum": [
+        "bos",
+        "sozlesme",
+        "insaat",
+        "bekci",
+        "yayin-bekliyor",
+        "fail",
+        "yayinlandi",
+        "red"
+      ],
+      "description": "bos: talep yok · sozlesme: sevk çalışır · insaat: inşaat çalışır · bekci: bekçi çalışır · yayin-bekliyor: Kapı 2 · fail: bekçi FAIL, insan karar verir · yayinlandi/red: kapalı"
+    },
+    "bekleyen_onay": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        null,
+        "sozlesme",
+        "yayin"
+      ]
+    },
     "motor": {
-      "type": "object", "additionalProperties": false,
-      "required": ["insaat", "bekci"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "insaat",
+        "bekci"
+      ],
       "properties": {
-        "insaat": {"type": ["string", "null"], "enum": [null, "codex", "agy", "grok", "claude"]},
-        "bekci": {"type": ["string", "null"], "enum": [null, "codex", "agy", "grok", "claude"]}
+        "insaat": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            null,
+            "codex",
+            "agy",
+            "grok",
+            "claude"
+          ]
+        },
+        "bekci": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            null,
+            "codex",
+            "agy",
+            "grok",
+            "claude"
+          ]
+        }
       }
     },
-    "talep": {"type": ["string", "null"], "description": "İnsanın tek cümlelik increment talebi."},
-    "kapsam_sapmasi": {"type": "array", "items": {"type": "string"},
-                       "description": "Sürücünün inşaat sonrası git diff ile ölçtüğü sözleşme dışı yollar."},
+    "talep": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "İnsanın tek cümlelik increment talebi."
+    },
+    "kapsam_sapmasi": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Sürücünün inşaat sonrası git diff ile ölçtüğü sözleşme dışı yollar."
+    },
     "gecmis": {
       "type": "array",
       "items": {
-        "type": "object", "additionalProperties": false,
-        "required": ["zaman", "olay"],
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "zaman",
+          "olay"
+        ],
         "properties": {
-          "zaman": {"type": "string"},
-          "olay": {"type": "string"}
+          "zaman": {
+            "type": "string"
+          },
+          "olay": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "deneme": {
+      "type": "integer",
+      "description": "Bu increment'te kaçıncı inşaat denemesi (0 = ilk). Bekçi FAIL → yeniden → +1."
+    },
+    "revizyon": {
+      "type": "array",
+      "description": "İnsanın revize notları; sevk yeniden keserken okur.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "zaman",
+          "not"
+        ],
+        "properties": {
+          "zaman": {
+            "type": "string"
+          },
+          "not": {
+            "type": "string"
+          }
         }
       }
     }
