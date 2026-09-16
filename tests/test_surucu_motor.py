@@ -6,7 +6,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from tests.surucu_yolu import PERSONEL
+from tests.surucu_yolu import (HataKosucu, PERSONEL, dizin_bayt_haritasi,
+                               dizin_bayt_korumasini_dogrula)
 from kart_motoru import karti_ilerlet, motor_uret
 from surucu import isi_ilerlet
 
@@ -55,8 +56,7 @@ class FabrikaMutluYolTesti(unittest.TestCase):
         self.iskelet_yolu = PERSONEL / "aksiyon-iskeleti.json"
         self.iskelet_once = self.iskelet_yolu.read_bytes()
         self.sablon_kok = PERSONEL / "sablonlar"
-        self.sablon_once = {
-            yol.name: yol.read_bytes() for yol in self.sablon_kok.iterdir()}
+        self.sablon_once = dizin_bayt_haritasi(self.sablon_kok)
         self.prod_kart_once = (PERSONEL / "kart.json").read_bytes()
         self.prod_durum_once = (PERSONEL / "durum.json").read_bytes()
 
@@ -67,8 +67,7 @@ class FabrikaMutluYolTesti(unittest.TestCase):
                          self.prod_kart_once)
         self.assertEqual((PERSONEL / "durum.json").read_bytes(),
                          self.prod_durum_once)
-        for yol in self.sablon_kok.iterdir():
-            self.assertEqual(yol.read_bytes(), self.sablon_once[yol.name])
+        dizin_bayt_korumasini_dogrula(self, self.sablon_kok, self.sablon_once)
 
     def test_fabrika_motoru_isi_ilerlete_verilince_bostan_parka_gider(self):
         once = json.loads(self.durum_yolu.read_text(encoding="utf-8"))
@@ -163,15 +162,6 @@ class FabrikaHataYoluTesti(unittest.TestCase):
 
     def test_kosucu_oserror_motor_hatasi_olur_parkta_biter(self):
         once = json.loads(self.durum_yolu.read_text(encoding="utf-8"))
-
-        class HataKosucu:
-            def __init__(self):
-                self.cagrilar = []
-
-            def __call__(self, komut):
-                self.cagrilar.append(list(komut))
-                raise OSError("cli yok")
-
         kosucu = HataKosucu()
         with patch("subprocess.run", side_effect=AssertionError("subprocess.run")):
             sonuc = isi_ilerlet(

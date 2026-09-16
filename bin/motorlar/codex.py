@@ -26,6 +26,8 @@ def cozumle(stdout):
             olay = json.loads(satir)
         except ValueError:
             continue
+        if not isinstance(olay, dict):
+            continue
         gordu = True
         tip = olay.get("type")
         if tip == "thread.started":

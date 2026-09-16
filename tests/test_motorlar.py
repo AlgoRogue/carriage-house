@@ -32,6 +32,13 @@ class OrtakTesti(unittest.TestCase):
             self.assertTrue(bozuk["hata"])
             self.assertEqual(set(bozuk), {"hata", "maliyet", "tur", "metin", "yapisal", "oturum"})
 
+    def test_json_dizi_non_dict_cozumle_attributeerror_kacmadan_hata_doner(self):
+        # Debt 12: JSON olarak geçerli ama dict olmayan gövde (ör. "[]") .get() çağrısında
+        # AttributeError fırlatmamalı; her motor hata Sinyali dönmeli.
+        for ad, modul in motorlar.MOTORLAR.items():
+            with self.subTest(ad=ad):
+                self.assertTrue(modul.cozumle("[]")["hata"])
+
     def test_yapisal_coz(self):
         self.assertEqual(motorlar.yapisal_coz('önsöz {"a": 1} sonsöz'), {"a": 1})
         self.assertIsNone(motorlar.yapisal_coz("[1,2]"))
@@ -45,6 +52,13 @@ class ClaudeTesti(unittest.TestCase):
         self.assertEqual(k[k.index("--allowedTools") + 1], "Read,Write")
         self.assertEqual(k[k.index("--model") + 1], "opus")
         self.assertEqual(json.loads(k[k.index("--json-schema") + 1]), SEMA)
+
+    def test_butce_verilmezse_max_budget_usd_argvde_yok(self):
+        # Debt 06: yalnız model ayarında argv'de "--max-budget-usd None" üretilmemeli.
+        k = motorlar.claude.komut("x", {"model": "sonnet", "araclar": None,
+                                        "butce_usd": None, "json_sema": None})
+        self.assertNotIn("--max-budget-usd", k)
+        self.assertNotIn("None", k)
 
     def test_cozumle_maliyet_ve_yapisal(self):
         c = motorlar.claude.cozumle(json.dumps({"is_error": False, "total_cost_usd": 0.42, "num_turns": 3,

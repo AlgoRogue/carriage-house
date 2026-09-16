@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from tests.surucu_yolu import PERSONEL
+from tests.surucu_yolu import HataKosucu, PERSONEL
 from kart_motoru import motor_uret
 from surucu_cekirdek import Sinyal
 
@@ -193,10 +193,6 @@ class KayitliMotorVeBozukKartTesti(unittest.TestCase):
                     self.assertEqual(sinyal, Sinyal.HATA)
 
     def test_kosucu_oserror_hata_sinyali_doner(self):
-        class HataKosucu:
-            def __call__(self, komut):
-                raise OSError("cli bulunamadı")
-
         kart = kart_yaz(self.dizin / "oserror", cli="claude", model="sonnet")
         motor = motor_uret(kart, HataKosucu())
         sinyal, metin = motor("planlaniyor")

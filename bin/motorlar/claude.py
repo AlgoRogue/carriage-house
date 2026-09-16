@@ -10,9 +10,10 @@ VARSAYILAN_MODEL = "sonnet"
 def komut(istem, ayarlar):
     komut_ = ["claude", "-p", istem, "--output-format", "json",
               "--model", str(ayarlar.get("model") or VARSAYILAN_MODEL),
-              "--max-budget-usd", str(ayarlar.get("butce_usd")),
               "--allowedTools", ",".join(ayarlar.get("araclar") or []),
               "--permission-mode", "acceptEdits"]
+    if ayarlar.get("butce_usd") is not None:
+        komut_.extend(["--max-budget-usd", str(ayarlar["butce_usd"])])
     if ayarlar.get("json_sema"):
         komut_.extend(["--json-schema", json.dumps(ayarlar["json_sema"], ensure_ascii=False)])
     return komut_
@@ -22,6 +23,8 @@ def cozumle(stdout):
     try:
         veri = json.loads(stdout or "")
     except ValueError:
+        return bozuk(stdout, "claude")
+    if not isinstance(veri, dict):
         return bozuk(stdout, "claude")
     metin = veri.get("result") or ""
     # --json-schema verildiyse yapısal çıktı `structured_output` alanında gelir; yoksa metinden çözülür.

@@ -148,20 +148,18 @@ class SurucuHataVeRedTesti(unittest.TestCase):
 
     def test_basari_utf8_okunamayan_artefaktta_ilerlemez_motor_durumunda_kalir(self):
         once = self.depo.oku()
-        plan_yolu = self.isler_kok / "IS-09" / "plan.md"
-        plan_yolu.parent.mkdir(parents=True)
-        plan_yolu.write_bytes(b"\xff\xfe\x00\x00")
 
-        # Motor basari sinyali verir ama metin boş olduğundan bozuk dosya kalır; UTF-8 okunamadığından reddedilir.
-        sonuc = isi_ilerlet(SahteMotor(metin=""), is_id="IS-09",
+        # Debt 09: gerçek UTF-8-okunamaz yol — Motor geçersiz UTF-8 baytları döner (basari sinyaliyle),
+        # yazım sonrası okuma reddedilir; boş metin burada kullanılmaz (o SP-1 yoludur, ayrı test).
+        sonuc = isi_ilerlet(SahteMotor(metin=b"\xff\xfe\x00\x00"), is_id="IS-09",
                             durum_yolu=self.yol, isler_kok=self.isler_kok)
 
         self.assertEqual(sonuc.izlenen_yol, ("bos", "is_alindi", "planlaniyor"))
         self.assertEqual(sonuc.bitis_durumu, "planlaniyor")
         self.assertEqual(self.depo.oku(),
                          dict(once, durum="planlaniyor", is_id="IS-09", son_sinyal=None))
-        # Bozuk dosya silinmez/değişmez ama geçiş kabul edilmez.
-        self.assertEqual(plan_yolu.read_bytes(), b"\xff\xfe\x00\x00")
+        self.assertEqual((self.isler_kok / "IS-09" / "plan.md").read_bytes(),
+                         b"\xff\xfe\x00\x00")
 
     def test_delege_basari_bos_artefaktta_ilerlemez_delege_durumunda_kalir(self):
         once = self.depo.oku()
@@ -267,6 +265,8 @@ class SurucuHataVeRedTesti(unittest.TestCase):
         self.assertEqual(sonuc.izlenen_yol, ("bos", "is_alindi", "planlaniyor"))
         self.assertEqual(self.depo.oku(),
                          dict(once, durum="planlaniyor", is_id="IS-15", son_sinyal=None))
+        # Debt 11: encode önce denenir; boş plan.md kalıntısı bırakılmaz.
+        self.assertFalse((self.isler_kok / "IS-15" / "plan.md").exists())
 
     def test_tanimsiz_hedef_durum_dosyasini_degistirmez(self):
         self.depo.yaz(DurumKaydi(

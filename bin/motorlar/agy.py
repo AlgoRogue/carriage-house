@@ -23,6 +23,8 @@ def cozumle(stdout):
         veri = json.loads(stdout or "")
     except ValueError:
         return bozuk(stdout, "agy")
+    if not isinstance(veri, dict):
+        return bozuk(stdout, "agy")
     metin = veri.get("response") or ""
     if not isinstance(metin, str):
         metin = json.dumps(metin, ensure_ascii=False)

@@ -22,6 +22,10 @@ class SurucuAdim:
     hata-dışı kenar, yoksa tek kenar seçilir. Kenar yoksa (ilk dilimde park
     gibi) veya seçim belirsizse durum korunarak red döner. Her çağrı en
     fazla bir geçiş uygular.
+
+    ``metin`` üretimde her zaman ``str``dür (SEAMS.md S2). Artefakt yazıcısı
+    ham ``bytes``'ı da olduğu gibi yazar; bu yalnız test seam'inin geçersiz
+    UTF-8 red yolunu (SP-D2) kanıtlamasını sağlar, içerik şeması icat etmez.
     """
 
     def __init__(self, iskelet, motor, *, is_id=None, is_kok=None,
@@ -69,13 +73,15 @@ class SurucuAdim:
         if not isinstance(metin, (str, bytes)) or not metin.strip():
             return False
 
+        try:
+            veri = metin if isinstance(metin, bytes) else metin.encode("utf-8")
+        except UnicodeEncodeError:
+            return False
+
         yol = self._artefakt_yolu(durum)
         try:
             yol.parent.mkdir(parents=True, exist_ok=True)
-            if isinstance(metin, bytes):
-                yol.write_bytes(metin)
-            else:
-                yol.write_text(metin, encoding="utf-8")
+            yol.write_bytes(veri)
 
             if not yol.is_file():
                 return False

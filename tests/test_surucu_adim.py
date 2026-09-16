@@ -7,7 +7,8 @@ from contextlib import ExitStack
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from tests.surucu_yolu import KOK, PERSONEL
+from tests.surucu_yolu import (KOK, PERSONEL, dizin_bayt_haritasi,
+                               dizin_bayt_korumasini_dogrula)
 from sahte_motor import SahteMotor
 from surucu_adim import SurucuAdim
 from surucu_cekirdek import Surucu
@@ -21,12 +22,10 @@ class SurucuAdimTesti(unittest.TestCase):
         self.iskelet = json.loads(
             (KOK / "personel/CH-0001/aksiyon-iskeleti.json").read_text(encoding="utf-8"))
         self.sablon_kok = PERSONEL / "sablonlar"
-        self.sablon_once = {
-            yol.name: yol.read_bytes() for yol in self.sablon_kok.iterdir()}
+        self.sablon_once = dizin_bayt_haritasi(self.sablon_kok)
 
     def tearDown(self):
-        for yol in self.sablon_kok.iterdir():
-            self.assertEqual(yol.read_bytes(), self.sablon_once[yol.name])
+        dizin_bayt_korumasini_dogrula(self, self.sablon_kok, self.sablon_once)
 
     def test_motor_durumlari_bir_kez_cagrilir_girdi_doldurulmus_sablondur(self):
         for durum, hedef in [("planlaniyor", "plan_hazir"),
@@ -103,7 +102,10 @@ class SurucuAdimTesti(unittest.TestCase):
             self.assertEqual(sonuc.yeni_durum, "planlaniyor")
             self.assertIn("İş artefaktı boş veya yazılamadı", sonuc.mesaj)
 
-    def test_basari_utf8_okunamayan_artefaktta_reddedilir_durum_korunur(self):
+    def test_basari_bos_metinde_eski_bozuk_dosyaya_dokunmadan_reddedilir_durum_korunur(self):
+        # Debt 09: boş Motor metni SP-1 kapısında dosyaya hiç dokunmadan reddedilir;
+        # eski bozuk UTF-8 dosya değişmeden kalır. Gerçek UTF-8-okunamaz reddi:
+        # test_gecersiz_utf8_bytes_reddedilir_durum_korunur (Motor bayt döner).
         with tempfile.TemporaryDirectory() as gecici:
             is_kok = Path(gecici)
             plan_yolu = is_kok / "IS-03C" / "plan.md"
@@ -117,6 +119,7 @@ class SurucuAdimTesti(unittest.TestCase):
             self.assertFalse(sonuc.kabul)
             self.assertEqual(sonuc.yeni_durum, "planlaniyor")
             self.assertIn("İş artefaktı boş veya yazılamadı", sonuc.mesaj)
+            self.assertEqual(plan_yolu.read_bytes(), b"\xff\xfe\x00\x00")
 
     def test_eski_artefakt_varken_bos_metin_reddedilir_durum_korunur(self):
         # SP-1: eski artefakt varken boş/whitespace Motor metni reddedilmeli
@@ -164,6 +167,8 @@ class SurucuAdimTesti(unittest.TestCase):
             self.assertFalse(sonuc.kabul)
             self.assertEqual(sonuc.yeni_durum, "planlaniyor")
             self.assertIn("İş artefaktı boş veya yazılamadı", sonuc.mesaj)
+            # Debt 11: encode önce denenir; boş plan.md kalıntısı bırakılmaz.
+            self.assertFalse((is_kok / "IS-03F" / "plan.md").exists())
 
     def test_gecersiz_utf8_bytes_reddedilir_durum_korunur(self):
         # Geçersiz UTF-8 byte dizisi yazılmaya çalışıldığında UnicodeDecodeError yakalanıp reddedilmeli
