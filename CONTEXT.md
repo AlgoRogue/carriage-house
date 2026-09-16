@@ -55,16 +55,33 @@ _Avoid_: CLI (tek başına), model (tek başına)
 _Avoid_: Şirket (metafor), framework
 
 **Sürücü**:
-Deterministik yürütücü: durumu okur, aksiyon iskeletine göre adımı seçer, gerekirse Motor’u çağırır, sinyali yakalar, sonraki durumu yazar. Kararı LLM vermez.
-_Avoid_: Harness (tek başına; AI harness ile karışır), AI harness, agent loop (belirsiz)
+Personel ajanının deterministik yürütücüsü: durumu okur, aksiyon iskeletine göre adımı seçer, gerekirse Motor’u çağırır, sinyali yakalar, sonraki durumu yazar. Kararı LLM vermez.
+_Avoid_: Harness (tek başına; AI harness ile karışır), AI harness, agent loop (belirsiz), bin/kos.py (o **Koşu sürücüsü**)
+
+**Koşu sürücüsü**:
+Eski şirket döngüsünde bir takımı bir kez koşturan betik omurgası (`bin/kos.py`). Personel **Sürücü**sü değildir; ikinci planda bakım.
+_Avoid_: Sürücü (personel anlamında)
 
 **İş**:
 Bir ajana verilen görev birimi; prototipteki increment ile aynı kavramdır.
 _Avoid_: Görev, task, increment (eş anlamlı; canonical terim İş)
 
 **Sinyal**:
-Motorun veya ajanın ürettiği, deterministik katmanın yakaladığı durum bildirimi (ör. tamam, hata).
-_Avoid_: Mesaj, log, event (genel yazılım anlamında)
+Motor koşusunun deterministik katmana bıraktığı, kapalı sözlükten seçilmiş kontrol bildirimi (ör. başarı / hata; sözlük genişleyebilir). Serbest metin Sinyal değildir.
+_Avoid_: Mesaj, log, event (genel yazılım anlamında), Motor çıktı metni
+
+**Motor girdisi**:
+Sürücü’nün Motor’a verdiği çağrı yükü: doldurulmuş **Prompt şablonu** ve/veya CLI’nin kendi kalıcı yönlendirme kanalları (ör. proje `CLAUDE.md`, skill, hook). Kimlik yeniden anlatılmaz; bu adımda tamamlanmış **İş artefaktı** yollarına okuma ve yeni artefakt yazma yönü verilir.
+_Avoid_: her çağrıda rol ezberi, yalnız durum adı, artefakt metnini şablona yapıştırmak
+
+**Prompt şablonu**:
+Personel kaydı altında, durum adına göre seçilen istem kalıbı. Asıl işi “şu yolu oku / şu artefaktı yaz” yönüne indirger; ajan kimliğini her seferinde yeniden tanımlamaz (kimlik Personel kaydı ve CLI kalıcı yönlendirmesinde çözülmüştür).
+_Avoid_: her adımda “sen X’sin” bloğu, tek global şablon (durum seçimsiz)
+
+**İş artefaktı**:
+Bir **İş**e bağlı, Motor’un içerik kanalında ürettiği kalıcı çıktı (ör. plan metni, delege paketi); sonraki deterministik adım bunu okur. Kontrol akışını Sinyal yönetir; artefakt Sinyal değildir.
+_Avoid_: log, koşu kaydı, Ajan hafızası (farklı kavram)
+
 
 **Skill**:
 Personel kartının arka yüzünde listelenen, ajanın yapabildiği adlandırılmış yetenek.
@@ -92,7 +109,7 @@ _Avoid_: Gömülü model, embedding, RAG
 
 **Kapı**:
 Bir eylemin yapılmasından önce personel numarası ve **Kapı yetkileri** ile sorulan yetki kontrol noktası (bu personele bu eylem için izin var mı?).
-_Avoid_: Evre adımı (iş akışı geçişi; Kapı değil), Gate 1/Gate 2 (eski prototip), insan yayını (ayrı kavram — henüz adlandırılmadı)
+_Avoid_: Evre adımı (iş akışı geçişi; Kapı değil), Gate 1/Gate 2 (eski prototip), insan yayını (ayrı kavram - henüz adlandırılmadı)
 
 **Kuyruk**:
 Önceden belirlenmiş veya olayla eklenen işlerin sırayla ilerlemesi.
@@ -106,6 +123,10 @@ _Avoid_: Pipeline, backlog
 - **Kapı yetkileri**, personel dosyasından ayrı bir kayıttır; aynı dizindedir.
 - **Orkestrasyon** **İş**leri **Kuyruk**ta sıraya koyar ve **Sinyal**leri yönlendirir.
 - **Sürücü** aksiyon iskeletini işletir; **Motor** yalnız sürücünün açtığı adımda çalışır; sonraki durumu yalnız sürücü yazar.
+- **Sürücü**, durumuna göre **Prompt şablonu** seçer ve **yalnız kendisi** doldurur; **Motor girdisi** bundan (ve CLI kalıcı yönlendirmesinden) oluşur; Motor’un içerik çıktısını **İş artefaktı** olarak yazar; kontrol için yalnız **Sinyal** okur (`basari` / `hata` ilk dilim).
+- **İş artefaktı** işe özel dosya(lar) olarak `personel/<numara>/` altında durur (ör. `isler/<is_id>/…`).
+- Başarı **Sinyal**i, kabul edilebilir **İş artefaktı** yoksa geçersizdir; Sürücü ilerletmez.
+- **Motor girdisi** doldurulmuş **Prompt şablonu**dur; Defter / anlamsal eşleyici parçaları sonradan eklenir (şimdilik yok sayılır).
 - **Anlamsal eşleyici**, **İş** ile hafızalar arasında köprü kurar; **Orkestrasyon** anlamsal arama yapmaz.
 
 ## Flagged ambiguities
@@ -115,3 +136,19 @@ _Avoid_: Pipeline, backlog
 - Eski prototip adı **bekçi**: henüz domain terimi değil; bir ajana **Rol** olarak verilecek, isim değişebilir.
 - Personel dosyasının zorunlu bölümleri henüz envanterlenmedi.
 - **Defter** ile **Ajan hafızası** ayrımı kilitli; Parça 1’de ikisi de yok (bilinçli).
+
+- **Motor girdisi** / **İş artefaktı** / **Sinyal** (`basari`/`hata`) grill + ADR-0001 ile kilitlendi; artefakt dosya adları uygulama diliminde.
+- Mevcut erken `hafiza.json` / `HafizaDeposu` lift’i bu kararlarda yok sayılır; Defter gelene kadar Motor girdisinin D ayağı yok.
+
+- **Prompt şablonu** grill ile kilitlendi: durum dosyaları + ince adım yönü; kimlik CLI/personelde. Slot envanteri uygulama diliminde.
+- Sinyal ilk dilim: yalnız `basari` / `hata`. Artefakt yolu: personel altında iş klasörü. Bozuk/eksik artefaktta başarı yok sayılır.
+
+- Prompt şablonu konumu: durum adına göre ayrı dosyalar (Q10 D). Artefakt slotu: tam metin değil adres/yol (Q12). Tek atım vs zincir Motor çağrısı ve kimlik gömme biçimi açık.
+
+- Motor durumu: Sürücü tek atım çağırır; CLI içinde araçlı çok tur olabilir (Q11a A+B). Kimlik bu adımda yeniden yazılmaz (Q11b reddi). Şablon doldurma yalnız Sürücü (Q13 A). Artefakt önce hedef yol, sonra okuma aracı (Q14 C→A).
+- **ADR-0001**: Sürücü Motor'u nasıl sürer - kilitlendi (ince şablon + CLI kalıcı yönlendirme hibrit; tek atım; artefakt yolu; `basari`/`hata`).
+
+- Mimari: ADR-0002 Python; ADR-0003 moduler monolit; ADR-0004 CH-0001 modul sinirlari; ADR-0005 ertelenen is sozlesmesi.
+
+- Ana yol (G6): personel / Carriage House tohumu; simdiki is: sistemi tasarlayacak **muhendis ajanini** (Cengizhan) insa etmek. takimlar/kapi ikinci plan.
+- ADR-0002 kabul (G1 A): Sürücü çekirdeği Python; UI/paylaşılan tip tetiginde yeni dil ADR (kaçış kapılı).

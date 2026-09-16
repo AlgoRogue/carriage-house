@@ -1,0 +1,601 @@
+<!doctype html>
+<html lang="tr">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cengizhan · Ajan hafızası mantık prototipi</title>
+<style>
+:root {
+  --ink: #172b32;
+  --accent: #075d50;
+  --line: #ccd6d9;
+  --bg: #f5f7f8;
+  --card: #fff;
+  --notice: #edf6f3;
+}
+* { box-sizing: border-box; }
+body {
+  font: 16px/1.55 system-ui, sans-serif;
+  margin: 32px auto;
+  padding: 0 20px 48px;
+  max-width: 960px;
+  background: var(--bg);
+  color: var(--ink);
+}
+h1, h2 { line-height: 1.2; }
+h1 { font-size: 1.7rem; margin: 8px 0 12px; }
+h2 { font-size: 1.15rem; margin: 0 0 12px; }
+p { margin: 0 0 12px; }
+.badge {
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: .02em;
+}
+section {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 22px;
+  margin: 20px 0;
+}
+button, input, textarea {
+  font: inherit;
+}
+button {
+  padding: 9px 14px;
+  margin: 5px 8px 5px 0;
+  border: 1px solid #147969;
+  border-radius: 6px;
+  background: white;
+  color: var(--accent);
+  cursor: pointer;
+}
+button:hover { background: #e7f3f0; }
+button:disabled { opacity: .45; cursor: default; }
+button[aria-selected="true"] {
+  background: var(--accent);
+  color: white;
+}
+button:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+}
+.soru {
+  border-left: 4px solid var(--accent);
+  padding: 12px 14px;
+  background: var(--notice);
+  font-weight: 650;
+}
+#notice {
+  border-left: 4px solid var(--accent);
+  padding: 10px 12px;
+  background: var(--notice);
+  margin: 16px 0 0;
+}
+dt { font-weight: 650; }
+dd { margin: 0 0 12px; }
+.kayit {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin: 0 0 10px;
+  background: #fbfcfc;
+}
+.kayit.yeni { border-left: 4px solid var(--accent); }
+.kayit p { margin: 0 0 6px; }
+.kayit p:last-child { margin: 0; }
+.alan { color: #4a5c62; font-size: .92rem; }
+.grup { margin: 14px 0; }
+.grup h3 {
+  font-size: .95rem;
+  margin: 0 0 8px;
+  color: #4a5c62;
+  font-weight: 650;
+}
+label { display: block; margin: 0 0 6px; font-weight: 650; }
+textarea {
+  width: 100%;
+  min-height: 72px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  margin: 0 0 8px;
+  resize: vertical;
+}
+ol.adimlar { padding-left: 22px; }
+ol.adimlar li { margin: 8px 0; }
+#history li { margin: 8px 0; }
+small { display: block; color: #4a5c62; }
+pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: #f5f7f8;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: .9rem;
+}
+.bos {
+  padding: 12px 0;
+  color: #4a5c62;
+}
+</style>
+<header>
+  <div class="badge">PROTOTYPE / THROWAWAY · geçici keşif kodu</div>
+  <h1>Cengizhan · Ajan hafızası mantık prototipi</h1>
+  <p class="soru">Boş ama yazılabilir Ajan hafızası, sırayla eklenen düz metin kayıtları olarak hissediliyor mu? Defter ve anlamsal eşleyici olmadan bu şekil yeterli mi, yoksa kayıt alanları/şekli eksik mi?</p>
+  <p>Bu demo CH-0001 (Cengizhan) için tek bir Ajan hafızasının veri şeklini elle hissettirir. Depo boş başlar. Yazmak, sona bir düz metin kaydı eklemektir. Kayıt yalnız <strong>metin</strong> taşır. Defter üretilmez. Anlamsal eşleyici çalışmaz. Sürücü, Motor, Kapı ve orkestrasyon bağlanmaz. Durum sayfa belleğindedir; disk yazılmaz. Çift tıklayınca açılır.</p>
+</header>
+
+<section aria-labelledby="state-title">
+  <h2 id="state-title">Şu anki durum</h2>
+  <div id="state" aria-live="polite"></div>
+  <p id="notice" role="status"></p>
+</section>
+
+<section>
+  <h2>Serbest deneme</h2>
+  <p>İşlemleri herhangi bir sırada deneyin. Her tıklama depoyu günceller veya bu dilimde olmayan bir şeyi reddeder. Serbest bir işlem açık rehberi sonlandırır.</p>
+  <div class="grup">
+    <h3>Yaz</h3>
+    <label for="metin">Yeni kayıt metni</label>
+    <textarea id="metin" placeholder="Düz metin yazın. Boş bırakıp eklemek de bir kayıttır."></textarea>
+    <div id="yaz-aksiyon"></div>
+  </div>
+  <div class="grup">
+    <h3>Oku</h3>
+    <div id="oku-aksiyon"></div>
+  </div>
+  <div class="grup">
+    <h3>Bu dilimde yok (şekli zorla)</h3>
+    <p>Eksik alan veya başka katman istenirse depo reddeder. Kayıt şekli değişmez.</p>
+    <div id="yasa-aksiyon"></div>
+  </div>
+  <div class="grup">
+    <h3>Sıfırla</h3>
+    <div id="sifirla-aksiyon"></div>
+  </div>
+</section>
+
+<section>
+  <h2>Rehberli senaryolar</h2>
+  <p>Bir sekme seçmek depoyu boş başlangıca alır. Senaryo, kâğıtta zor görünen hâlleri sırayla tıklatır.</p>
+  <div role="tablist" aria-label="Senaryolar" id="tabs"></div>
+  <div id="walkthrough" role="tabpanel"></div>
+</section>
+
+<section>
+  <h2>Bu oturumdaki hareketler</h2>
+  <p>Yalnız bellekte tutulur. Başa dönmek veya senaryo seçmek bu listeyi temizler.</p>
+  <ol id="history"></ol>
+  <details>
+    <summary>Bellekteki belge (kayitlar listesi)</summary>
+    <p>Birincil görünüm yukarıdaki etiketli alanlardır. Bu kopya, taşınacak JSON şeklini denetlemek içindir.</p>
+    <pre id="belge"></pre>
+  </details>
+</section>
+
+<script id="hafiza-deposu">
+// Portable pure module: no DOM, I/O, timers, or persistence.
+// Lift candidate: HafizaDeposu.oku / ekle and the {kayitlar:[{metin}]} JSON shape.
+const HafizaDeposu = (() => {
+  const PERSONEL = Object.freeze({
+    personel_numarasi: "CH-0001",
+    ad: "Cengizhan"
+  });
+  const KAYIT_ALANI = Object.freeze(["metin"]);
+  const BU_DILIMDE_YOK = Object.freeze([
+    "zaman",
+    "kayit_kimligi",
+    "etiket",
+    "is_id",
+    "gomulu_vektor",
+    "defter",
+    "anlamsal_esleyici"
+  ]);
+  const REDLER = Object.freeze({
+    sil: "Kayıt silinmez. Bu depo yalnız sona ekler.",
+    zaman: "Kayıt alanı yalnız metin. Zaman damgası bu dilimde yok.",
+    etiket: "Kayıt alanı yalnız metin. Etiket bu dilimde yok.",
+    is: "Ajan hafızası İş kaydı değildir. is_id bu dilimde yok.",
+    anlamsal: "Anlamsal eşleyici bu dilimde yok. Depo arama yapmaz; yalnız kayıt tutar.",
+    defter: "Defter, Ajan hafızasının sıcak yüzüdür; deponun kendisi değildir. Bu dilim Defter üretmez ve yansıtmaz.",
+    baska_ajan: "Bu depo yalnız CH-0001 (Cengizhan) içindir. Başka personel numarasına yazılmaz.",
+    durum: "Anlık durum (durum.json) Ajan hafızası değildir. Bu dilim onu karıştırmaz."
+  });
+  const copy = (value) => JSON.parse(JSON.stringify(value));
+
+  function bosBelge() {
+    return { kayitlar: [] };
+  }
+
+  function create(secenek) {
+    const kimlik = Object.assign({}, PERSONEL, secenek && secenek.kimlik);
+    const belge = (secenek && secenek.belge) ? secenek.belge : bosBelge();
+    let okuyucuNo = (secenek && secenek.okuyucuNo) || 1;
+    let sonIslem;
+    if (secenek && secenek.yeniOkuyucu) {
+      const sayi = belge.kayitlar.length;
+      sonIslem = {
+        tur: "yeni_okuyucu",
+        ok: true,
+        mesaj: sayi === 0
+          ? "Yeni okuyucu aynı boş depoyu görüyor. Kayıt uydurulmadı."
+          : "Yeni okuyucu aynı " + sayi + " kaydı, ekleme sırasıyla, görüyor. Disk yok; paylaşılan bellek belgesi var."
+      };
+    } else {
+      sonIslem = {
+        tur: "baslangic",
+        ok: true,
+        mesaj: "Depo boş. Henüz kayıt yok. Bu, boş ama yazılabilir başlangıçtır."
+      };
+    }
+
+    function oku() {
+      return copy(belge.kayitlar);
+    }
+
+    function ekle(metin) {
+      if (typeof metin !== "string") {
+        sonIslem = {
+          tur: "ekle",
+          ok: false,
+          mesaj: "Kayıt metni düz metin olmalı."
+        };
+        return copy(sonIslem);
+      }
+      belge.kayitlar.push({ metin: metin });
+      const sira = belge.kayitlar.length;
+      sonIslem = {
+        tur: "ekle",
+        ok: true,
+        sira: sira,
+        metin: metin,
+        mesaj: sira === 1
+          ? "İlk kayıt sona eklendi. Alanlar: yalnız metin."
+          : "Kayıt " + sira + " sona eklendi. Öncekiler duruyor; sıra ekleme sırasıdır."
+      };
+      return copy(sonIslem);
+    }
+
+    function yeniOkuyucu() {
+      return create({
+        kimlik: kimlik,
+        belge: belge,
+        okuyucuNo: okuyucuNo + 1,
+        yeniOkuyucu: true
+      });
+    }
+
+    function bildirOku() {
+      const kayitlar = oku();
+      sonIslem = {
+        tur: "oku",
+        ok: true,
+        kayit_sayisi: kayitlar.length,
+        mesaj: kayitlar.length === 0
+          ? "Okuma: kayıt yok. Boş başlangıç bir eksik dosya değil, boş listedir."
+          : "Okuma: " + kayitlar.length + " kayıt, ekleme sırasıyla. Defter veya eşleyici yok."
+      };
+      return copy(sonIslem);
+    }
+
+    function dene(eylem) {
+      const mesaj = REDLER[eylem] || "Bu işlem bu dilimde yok.";
+      sonIslem = {
+        tur: "dene",
+        eylem: eylem,
+        ok: false,
+        mesaj: mesaj
+      };
+      return copy(sonIslem);
+    }
+
+    function durum() {
+      return {
+        personel_numarasi: kimlik.personel_numarasi,
+        ad: kimlik.ad,
+        katman: "Ajan hafızası",
+        katman_degil: ["Defter", "Orkestrasyon hafızası", "anlık durum"],
+        okuyucu_no: okuyucuNo,
+        kayit_sayisi: belge.kayitlar.length,
+        kayit_alani: copy(KAYIT_ALANI),
+        bu_dilimde_yok: copy(BU_DILIMDE_YOK),
+        kayitlar: oku(),
+        belge: copy(belge),
+        son_islem: copy(sonIslem)
+      };
+    }
+
+    return Object.freeze({
+      oku: oku,
+      ekle: ekle,
+      yeniOkuyucu: yeniOkuyucu,
+      bildirOku: bildirOku,
+      dene: dene,
+      durum: durum
+    });
+  }
+
+  return Object.freeze({
+    create: create,
+    bosBelge: bosBelge,
+    PERSONEL: PERSONEL,
+    KAYIT_ALANI: KAYIT_ALANI,
+    BU_DILIMDE_YOK: BU_DILIMDE_YOK
+  });
+})();
+</script>
+<script>
+// Throwaway page. Calls only the public HafizaDeposu surface.
+const el = (id) => document.getElementById(id);
+const presets = {
+  ogle: "öğle notu",
+  aksam: "akşam notu: usta henüz yok, parkta bekleyen işi karıştırma",
+  tekrar: "öğle notu"
+};
+const yasa = [
+  ["sil", "Bir kaydı sil"],
+  ["zaman", "Kayıta zaman yaz"],
+  ["etiket", "Kayıta etiket tak"],
+  ["is", "Kaydı bir İşe bağla"],
+  ["anlamsal", "Anlamsal eşleyici ile ara"],
+  ["defter", "Deftere yansıt"],
+  ["baska_ajan", "Başka ajanın hafızasına yaz"],
+  ["durum", "Anlık duruma yaz"]
+];
+const senaryolar = [
+  {
+    title: "Mutlu yol: boş, yaz, sıra",
+    description: "Cengizhan'ın Ajan hafızası boş başlar. İnsan iki düz metin notu sırayla ekler. İzle: boş liste dürüst mü, ikinci yazma birinciyi eziyor mu, kayıtta metin dışında alan beliriyor mu? Defter açılmaz.",
+    steps: [
+      ["Boş hafızayı oku", { tur: "oku" }],
+      ["Öğle notunu ekle", { tur: "ekle", metin: presets.ogle }],
+      ["Akşam notunu ekle", { tur: "ekle", metin: presets.aksam }]
+    ]
+  },
+  {
+    title: "Yeni okuyucu yazılanı görür",
+    description: "Bir okuyucu yazar, sonra aynı depoyu yeni bir okuyucu açar. Disk yok; kalıcılık hissi paylaşılan bellek belgesidir. İzle: yeni okuyucu uydurma kayıt eklemesin, sıra bozulmasın.",
+    steps: [
+      ["Yazılan kalır notunu ekle", { tur: "ekle", metin: "yazılan kalır" }],
+      ["Aynı depoyu yeni okuyucuyla aç", { tur: "okuyucu" }],
+      ["Yeni okuyucuyla oku", { tur: "oku" }]
+    ]
+  },
+  {
+    title: "Eksik alan ve başka katman reddi",
+    description: "Bir kayıt varken zaman, etiket, İş numarası, anlamsal arama ve Defter yansıtması istenir. İzle: hepsi reddedilmeli, kayıt hâlâ yalnız metin kalmalı. Bu, 'şekil eksik mi' sorusunun kaba hâlidir.",
+    steps: [
+      ["Bir not ekle", { tur: "ekle", metin: presets.ogle }],
+      ["Kayıta zaman yazmayı dene", { tur: "dene", eylem: "zaman", ret: true }],
+      ["Etiket takmayı dene", { tur: "dene", eylem: "etiket", ret: true }],
+      ["İşe bağlamayı dene", { tur: "dene", eylem: "is", ret: true }],
+      ["Anlamsal aramayı dene", { tur: "dene", eylem: "anlamsal", ret: true }],
+      ["Deftere yansıtmayı dene", { tur: "dene", eylem: "defter", ret: true }]
+    ]
+  },
+  {
+    title: "Boş metin yine kayıttır",
+    description: "Doğrulama tiyatrosu yok: boş metin de bir kayıttır. Ardından gerçek bir not eklenir. İzle: delik gibi duran birinci kayıt, hafızayı sahte mi hissettiriyor, yoksa dürüst mü?",
+    steps: [
+      ["Boş metin ekle", { tur: "ekle", metin: "" }],
+      ["Ardından düz bir not ekle", { tur: "ekle", metin: presets.aksam }]
+    ]
+  }
+];
+
+let depo = HafizaDeposu.create();
+let secili = null;
+let imlec = 0;
+let hareketler = [];
+let sonSira = null;
+
+function dugme(metin, isleyici) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.textContent = metin;
+  b.onclick = isleyici;
+  return b;
+}
+
+function calistir(aksiyon, rehberli) {
+  if (!rehberli) secili = null;
+  const once = depo.durum();
+  let sonuc;
+  if (aksiyon.tur === "ekle") sonuc = depo.ekle(aksiyon.metin);
+  else if (aksiyon.tur === "oku") sonuc = depo.bildirOku();
+  else if (aksiyon.tur === "okuyucu") {
+    depo = depo.yeniOkuyucu();
+    sonuc = depo.durum().son_islem;
+  } else if (aksiyon.tur === "dene") sonuc = depo.dene(aksiyon.eylem);
+  else if (aksiyon.tur === "sifirla") {
+    depo = HafizaDeposu.create();
+    sonuc = depo.durum().son_islem;
+  } else {
+    sonuc = { ok: false, mesaj: "Bilinmeyen işlem." };
+  }
+  const sonra = depo.durum();
+  sonSira = (sonuc.ok && sonuc.tur === "ekle") ? sonuc.sira : null;
+  const etiket = sonuc.ok ? "Kabul" : "Ret";
+  hareketler.push(
+    etiket + " · " + (sonuc.mesaj || "") +
+    " · kayıt sayısı " + once.kayit_sayisi + " → " + sonra.kayit_sayisi +
+    " · okuyucu " + sonra.okuyucu_no
+  );
+  const beklenenRet = !!aksiyon.ret;
+  if (rehberli && (beklenenRet ? !sonuc.ok : sonuc.ok)) imlec += 1;
+  ciz();
+}
+
+function baslat(i) {
+  depo = HafizaDeposu.create();
+  secili = i;
+  imlec = 0;
+  hareketler = [];
+  sonSira = null;
+  ciz();
+}
+
+function metinGoster(metin) {
+  if (metin === "") return "(boş metin)";
+  return metin;
+}
+
+function alan(dl, ad, deger) {
+  const dt = document.createElement("dt");
+  const dd = document.createElement("dd");
+  dt.textContent = ad;
+  dd.textContent = deger;
+  dl.append(dt, dd);
+}
+
+function ciz() {
+  const s = depo.durum();
+  const kutusu = el("state");
+  kutusu.replaceChildren();
+  const dl = document.createElement("dl");
+  alan(dl, "Personel numarası", s.personel_numarasi);
+  alan(dl, "Ajan", s.ad);
+  alan(dl, "Katman", s.katman + " (Defter değil, Orkestrasyon hafızası değil, anlık durum değil)");
+  alan(dl, "Okuyucu örneği", String(s.okuyucu_no));
+  alan(dl, "Kayıt sayısı", String(s.kayit_sayisi));
+  alan(dl, "Kayıt şekli", "yalnız metin. Zaman, kimlik, etiket, İş numarası, gömülü vektör yok.");
+  alan(dl, "Bu dilimde olmayanlar", s.bu_dilimde_yok.join(", "));
+  kutusu.append(dl);
+
+  const baslik = document.createElement("h3");
+  baslik.textContent = "Kayıtlar (ekleme sırası)";
+  kutusu.append(baslik);
+  if (s.kayitlar.length === 0) {
+    const bos = document.createElement("p");
+    bos.className = "bos";
+    bos.textContent = "Henüz kayıt yok. Boş başlangıç budur: depo vardır, içinde hiçbir şey hatırlanmamıştır.";
+    kutusu.append(bos);
+  } else {
+    s.kayitlar.forEach((kayit, i) => {
+      const sira = i + 1;
+      const kart = document.createElement("div");
+      kart.className = "kayit" + (sonSira === sira ? " yeni" : "");
+      const a = document.createElement("p");
+      a.append(belgeSatir("Sıra", String(sira) + (sonSira === sira ? " · az önce eklendi" : "")));
+      const b = document.createElement("p");
+      b.append(belgeSatir("Metin", metinGoster(kayit.metin)));
+      const c = document.createElement("p");
+      c.className = "alan";
+      c.textContent = "Olmayan alanlar: zaman yok, kayıt kimliği yok, etiket yok, bağlı İş yok.";
+      kart.append(a, b, c);
+      kutusu.append(kart);
+    });
+  }
+
+  el("notice").textContent =
+    (s.son_islem.ok ? "Kabul edildi. " : "Reddedildi. ") + s.son_islem.mesaj;
+
+  el("yaz-aksiyon").replaceChildren(
+    dugme("Yazdığımı kayıt olarak ekle", () => calistir({ tur: "ekle", metin: el("metin").value })),
+    dugme("Öğle notunu ekle", () => calistir({ tur: "ekle", metin: presets.ogle })),
+    dugme("Akşam notunu ekle", () => calistir({ tur: "ekle", metin: presets.aksam })),
+    dugme("Aynı öğle notunu tekrar ekle", () => calistir({ tur: "ekle", metin: presets.tekrar })),
+    dugme("Boş metin ekle", () => calistir({ tur: "ekle", metin: "" }))
+  );
+  el("oku-aksiyon").replaceChildren(
+    dugme("Hafızayı oku", () => calistir({ tur: "oku" })),
+    dugme("Aynı depoyu yeni okuyucuyla aç", () => calistir({ tur: "okuyucu" }))
+  );
+  const yasaKutu = el("yasa-aksiyon");
+  yasaKutu.replaceChildren();
+  yasa.forEach(([eylem, etiket]) => {
+    yasaKutu.append(dugme(etiket, () => calistir({ tur: "dene", eylem: eylem })));
+  });
+  el("sifirla-aksiyon").replaceChildren(
+    dugme("Başa dön (boş depo)", () => {
+      secili = null;
+      imlec = 0;
+      hareketler = [];
+      sonSira = null;
+      calistir({ tur: "sifirla" });
+    })
+  );
+
+  const sekmeler = el("tabs");
+  sekmeler.replaceChildren();
+  senaryolar.forEach((senaryo, i) => {
+    const b = dugme(senaryo.title, () => baslat(i));
+    b.id = "tab-" + i;
+    b.setAttribute("role", "tab");
+    b.setAttribute("aria-selected", String(secili === i));
+    b.setAttribute("aria-controls", "walkthrough");
+    b.onkeydown = (e) => {
+      if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key)) return;
+      e.preventDefault();
+      const next = e.key === "Home" ? 0
+        : e.key === "End" ? senaryolar.length - 1
+        : (i + (e.key === "ArrowRight" ? 1 : senaryolar.length - 1)) % senaryolar.length;
+      baslat(next);
+      el("tab-" + next).focus();
+    };
+    sekmeler.append(b);
+  });
+
+  const panel = el("walkthrough");
+  panel.replaceChildren();
+  if (secili === null) {
+    panel.removeAttribute("aria-labelledby");
+    panel.textContent = "Bir senaryo seçmek depoyu boş başlangıca alır. Serbest deneme açık rehberi sonlandırır.";
+  } else {
+    const senaryo = senaryolar[secili];
+    panel.setAttribute("aria-labelledby", "tab-" + secili);
+    const acik = document.createElement("p");
+    acik.textContent = senaryo.description;
+    panel.append(acik);
+    const liste = document.createElement("ol");
+    liste.className = "adimlar";
+    senaryo.steps.forEach(([etiket, aksiyon], i) => {
+      const li = document.createElement("li");
+      const b = dugme((i < imlec ? "✓ " : "") + etiket, () => calistir(aksiyon, true));
+      b.disabled = i !== imlec;
+      li.append(b);
+      liste.append(li);
+    });
+    panel.append(liste);
+    if (imlec === senaryo.steps.length) {
+      const bitti = document.createElement("p");
+      bitti.textContent = "Senaryo tamamlandı. Durum paneline ve hareket listesine bakın: şekil hâlâ yalnız metin mi, yoksa bir alan eksik mi duruyor?";
+      panel.append(bitti);
+    }
+    panel.append(dugme("Bu senaryoyu yeniden başlat", () => baslat(secili)));
+  }
+
+  const tarih = el("history");
+  tarih.replaceChildren();
+  if (hareketler.length === 0) {
+    const li = document.createElement("li");
+    li.textContent = "Henüz hareket yok.";
+    tarih.append(li);
+  } else {
+    hareketler.forEach((satir) => {
+      const li = document.createElement("li");
+      li.textContent = satir;
+      tarih.append(li);
+    });
+  }
+  el("belge").textContent = JSON.stringify(s.belge, null, 2);
+}
+
+function belgeSatir(etiket, deger) {
+  const wrap = document.createElement("span");
+  const strong = document.createElement("strong");
+  strong.textContent = etiket + ": ";
+  wrap.append(strong, document.createTextNode(deger));
+  return wrap;
+}
+
+el("metin").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault();
+    calistir({ tur: "ekle", metin: el("metin").value });
+  }
+});
+
+ciz();
+</script>
+</html>

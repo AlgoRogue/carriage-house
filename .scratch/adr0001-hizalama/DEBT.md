@@ -2,7 +2,7 @@
 
 Kaynak: REVIEW-01..04. 01–04 merge-ready. Engelleyici değil.
 
-Asıl frontier: **debt** — 01–13 hepsi done.
+Asıl frontier: **debt** — 01–13 done; 14–16 açık.
 
 ## Done
 
@@ -22,7 +22,9 @@ Asıl frontier: **debt** — 01–13 hepsi done.
 
 ## Açık (adr0001-hizalama)
 
-Yok.
+- [14 Motor model listesi CLI'den](issues/14-motor-model-listesi-cli.md) — ready-for-agent; Blocked by: None
+- [15 Canlı duman agy/grok](issues/15-duman-agy-grok.md) — ready-for-agent; Blocked by: None
+- [16 Canlı duman Codex, kota sonrası](issues/16-duman-codex-sonra.md) — ready-for-agent; Blocked by: None; Comments: kota bitik, şimdilik pas
 
 ## Mevcut (yeni dosya yok; REVIEW-01 yeniden gördü)
 
