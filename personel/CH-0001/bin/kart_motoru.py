@@ -46,11 +46,12 @@ def motor_uret(kart_yolu, kosucu):
     return motor
 
 
-def karti_ilerlet(kart_yolu, kosucu, *, is_id, durum_yolu):
+def karti_ilerlet(kart_yolu, kosucu, *, is_id, durum_yolu, isler_kok=None):
     """Fabrika Motorunu mevcut isi_ilerlet girişine verir; yeni makine açmaz."""
-    from surucu import isi_ilerlet
+    from surucu import ISLER_KOK, isi_ilerlet
     return isi_ilerlet(
-        motor_uret(kart_yolu, kosucu), is_id=is_id, durum_yolu=durum_yolu)
+        motor_uret(kart_yolu, kosucu), is_id=is_id, durum_yolu=durum_yolu,
+        isler_kok=ISLER_KOK if isler_kok is None else isler_kok)
 
 
 def _kart_oku(kart_yolu):

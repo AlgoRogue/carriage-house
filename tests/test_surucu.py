@@ -1,4 +1,4 @@
-"""Tek giriş seam'i: geçici durum kaydı ve enjekte edilen SahteMotor."""
+"""Tek giriş seam'i: geçici durum kaydı, geçici İş artefaktı kökü, SahteMotor."""
 import json
 import shutil
 import tempfile
@@ -17,11 +17,13 @@ class SurucuMutluYolTesti(unittest.TestCase):
     def test_tek_cagri_isi_bostan_parka_kaydeder(self):
         with tempfile.TemporaryDirectory() as gecici:
             durum_yolu = Path(gecici) / "durum.json"
+            isler_kok = Path(gecici) / "isler"
             shutil.copyfile(PERSONEL / "durum.json", durum_yolu)
             once = json.loads(durum_yolu.read_text(encoding="utf-8"))
-            motor = SahteMotor()
+            motor = SahteMotor(metin="plan içeriği")
 
-            sonuc = isi_ilerlet(motor, is_id="IS-04", durum_yolu=durum_yolu)
+            sonuc = isi_ilerlet(motor, is_id="IS-04", durum_yolu=durum_yolu,
+                                isler_kok=isler_kok)
 
             self.assertEqual(sonuc.baslangic_durumu, "bos")
             self.assertEqual(sonuc.bitis_durumu, "park")
@@ -31,8 +33,25 @@ class SurucuMutluYolTesti(unittest.TestCase):
             self.assertEqual(
                 json.loads(durum_yolu.read_text(encoding="utf-8")),
                 dict(once, durum="park", is_id="IS-04", son_sinyal=None))
-            self.assertEqual([cagri["durum"] for cagri in motor.cagrilar],
-                             ["planlaniyor", "delege_hazirlaniyor"])
+
+            # Motor'a giden girdi durum adının kendisi değil; doldurulmuş şablon.
+            self.assertEqual(len(motor.cagrilar), 2)
+            plan_girdisi = motor.cagrilar[0]["durum"]
+            delege_girdisi = motor.cagrilar[1]["durum"]
+            self.assertNotEqual(plan_girdisi, "planlaniyor")
+            self.assertNotEqual(delege_girdisi, "delege_hazirlaniyor")
+            self.assertIn(str(isler_kok / "IS-04" / "plan.md"), plan_girdisi)
+            self.assertIn(str(isler_kok / "IS-04" / "plan.md"), delege_girdisi)
+            self.assertIn(str(isler_kok / "IS-04" / "paket.md"), delege_girdisi)
+            self.assertNotIn("plan içeriği", delege_girdisi)
+
+            # İş artefaktı S2/S4: Sürücü metni artefakt olarak yazar.
+            self.assertEqual(
+                (isler_kok / "IS-04" / "plan.md").read_text(encoding="utf-8"),
+                "plan içeriği")
+            self.assertEqual(
+                (isler_kok / "IS-04" / "paket.md").read_text(encoding="utf-8"),
+                "plan içeriği")
 
 
 class SurucuHataVeRedTesti(unittest.TestCase):
@@ -40,6 +59,7 @@ class SurucuHataVeRedTesti(unittest.TestCase):
         gecici = tempfile.TemporaryDirectory()
         self.addCleanup(gecici.cleanup)
         self.yol = Path(gecici.name) / "durum.json"
+        self.isler_kok = Path(gecici.name) / "isler"
         shutil.copyfile(PERSONEL / "durum.json", self.yol)
         self.depo = DurumDeposu(self.yol)
         self.surucu = Surucu(json.loads(
@@ -48,24 +68,26 @@ class SurucuHataVeRedTesti(unittest.TestCase):
     def test_planlama_hatasi_tek_cagrida_hatadan_parka_kaydeder(self):
         once = self.depo.oku()
 
-        sonuc = isi_ilerlet(SahteMotor(HATA),
-                            is_id="IS-05", durum_yolu=self.yol)
+        sonuc = isi_ilerlet(SahteMotor(HATA), is_id="IS-05",
+                            durum_yolu=self.yol, isler_kok=self.isler_kok)
 
         self.assertEqual(sonuc.izlenen_yol,
                          ("bos", "is_alindi", "planlaniyor", "hata", "park"))
         self.assertEqual(sonuc.bitis_durumu, "park")
         self.assertEqual(self.depo.oku(),
                          dict(once, durum="park", is_id="IS-05", son_sinyal=None))
+        self.assertFalse((self.isler_kok / "IS-05").exists())
 
     def test_delege_hatasi_tek_cagrida_hatadan_parka_kaydeder(self):
         once = self.depo.oku()
-        planlama = SahteMotor()
+        planlama = SahteMotor(metin="plan içeriği")
         delege = SahteMotor(HATA)
 
-        def motor(durum):
-            return (delege if durum == "delege_hazirlaniyor" else planlama)(durum)
+        def motor(girdi):
+            return (delege if "paket.md" in girdi else planlama)(girdi)
 
-        sonuc = isi_ilerlet(motor, is_id="IS-05", durum_yolu=self.yol)
+        sonuc = isi_ilerlet(motor, is_id="IS-05", durum_yolu=self.yol,
+                            isler_kok=self.isler_kok)
 
         self.assertEqual(sonuc.izlenen_yol, (
             "bos", "is_alindi", "planlaniyor", "plan_hazir",
@@ -73,6 +95,18 @@ class SurucuHataVeRedTesti(unittest.TestCase):
         self.assertEqual(sonuc.bitis_durumu, "park")
         self.assertEqual(self.depo.oku(),
                          dict(once, durum="park", is_id="IS-05", son_sinyal=None))
+
+    def test_basari_bos_artefaktta_ilerlemez_motor_durumunda_kalir(self):
+        once = self.depo.oku()
+
+        sonuc = isi_ilerlet(SahteMotor(metin=""), is_id="IS-06",
+                            durum_yolu=self.yol, isler_kok=self.isler_kok)
+
+        self.assertEqual(sonuc.izlenen_yol, ("bos", "is_alindi", "planlaniyor"))
+        self.assertEqual(sonuc.bitis_durumu, "planlaniyor")
+        self.assertEqual(self.depo.oku(),
+                         dict(once, durum="planlaniyor", is_id="IS-06", son_sinyal=None))
+        self.assertFalse((self.isler_kok / "IS-06" / "plan.md").exists())
 
     def test_tanimsiz_hedef_durum_dosyasini_degistirmez(self):
         self.depo.yaz(DurumKaydi(

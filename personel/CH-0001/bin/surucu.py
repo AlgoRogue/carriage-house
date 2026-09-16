@@ -7,7 +7,10 @@ from durum_deposu import DURUM_YOLU, DurumDeposu, DurumKaydi
 from surucu_adim import SurucuAdim
 
 
-ISKELET_YOLU = Path(__file__).resolve().parent.parent / "aksiyon-iskeleti.json"
+PERSONEL_KOK = Path(__file__).resolve().parent.parent
+ISKELET_YOLU = PERSONEL_KOK / "aksiyon-iskeleti.json"
+SABLON_KOK = PERSONEL_KOK / "sablonlar"
+ISLER_KOK = PERSONEL_KOK / "isler"
 
 
 @dataclass(frozen=True)
@@ -17,16 +20,19 @@ class SurucuSonucu:
     izlenen_yol: tuple[str, ...]
 
 
-def isi_ilerlet(motor, *, is_id: str, durum_yolu: str | Path = DURUM_YOLU
-                ) -> SurucuSonucu:
-    """İşi park'a kadar ilerlet; Motor callable'ı yalnız Sinyal üretir.
+def isi_ilerlet(motor, *, is_id: str, durum_yolu: str | Path = DURUM_YOLU,
+                isler_kok: str | Path = ISLER_KOK) -> SurucuSonucu:
+    """İşi park'a kadar ilerlet; Motor durumlarında şablon doldurur, artefakt yazar.
 
-    İskelet salt okunur; testler geçici durum dosyası enjekte eder.
+    İskelet ve Prompt şablonları salt okunur; testler geçici durum dosyası
+    ve İş artefaktı kökü enjekte eder (üretimde Personel kaydı altı).
     Her kabul edilen geçiş İş kimliği ve o geçişin Sinyali ile kaydedilir.
-    Hata yolu da park'a kadar ilerler; reddedilen geçişte ilerleme durur.
+    Hata yolu da park'a kadar ilerler; reddedilen geçişte ilerleme durur
+    (kabul edilemez artefakt dahil — S3, otomatik hata durumu açılmaz).
     """
     iskelet = json.loads(ISKELET_YOLU.read_text(encoding="utf-8"))
-    adim = SurucuAdim(iskelet, motor)
+    adim = SurucuAdim(iskelet, motor, is_id=is_id, is_kok=Path(isler_kok),
+                      sablon_kok=SABLON_KOK)
     depo = DurumDeposu(durum_yolu)
     durum = depo.oku()["durum"]
     yol = [durum]
