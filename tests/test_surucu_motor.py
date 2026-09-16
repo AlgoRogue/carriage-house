@@ -185,6 +185,54 @@ class FabrikaHataYoluTesti(unittest.TestCase):
             dict(once, durum="park", is_id="IS-05", son_sinyal=None))
         self.assertEqual(len(kosucu.cagrilar), 1)
 
+    def test_sahte_kosucu_bos_liste_ve_json_dizi_attributeerror_kacmaz_hatadan_parka_kaydeder(self):
+        # Debt 05 / Ticket 04: Sahte koşucu [] veya "[]" döndüğünde
+        # Sürücü döngüsü AttributeError ile patlamaz; tek çağrıda hata -> park yolunu izler.
+        for bozuk_cikti in ([], "[]"):
+            with self.subTest(cikti=bozuk_cikti):
+                shutil.copyfile(PERSONEL / "durum.json", self.durum_yolu)
+                once = json.loads(self.durum_yolu.read_text(encoding="utf-8"))
+                kosucu = SahteKosucu(bozuk_cikti)
+                with patch("subprocess.run", side_effect=AssertionError("subprocess.run")), \
+                     patch("subprocess.Popen", side_effect=AssertionError("subprocess.Popen")):
+                    sonuc = isi_ilerlet(
+                        motor_uret(self.kart, kosucu),
+                        is_id="IS-DEBT05", durum_yolu=self.durum_yolu, isler_kok=self.isler_kok)
+
+                self.assertEqual(sonuc.izlenen_yol, HATA_YOL)
+                self.assertEqual(sonuc.bitis_durumu, "park")
+                self.assertEqual(
+                    json.loads(self.durum_yolu.read_text(encoding="utf-8")),
+                    dict(once, durum="park", is_id="IS-DEBT05", son_sinyal=None))
+                self.assertFalse((self.isler_kok / "IS-DEBT05").exists())
+
+    def test_cozumle_yapisal_maliyet_oturum_durum_secmez_hata_yolu_isler(self):
+        # Ticket 04: cozumle içindeki yapisal (usta_atandi), maliyet, oturum durum seçmez;
+        # Motor hata sinyali verince başarı kapısı açılmaz, hata -> park izlenir.
+        yaniltici_hata = json.dumps({
+            "is_error": True,
+            "total_cost_usd": 12.5,
+            "num_turns": 3,
+            "session_id": "sess-hata-123",
+            "result": "hata oluştu ama plan_hazir veya usta_atandi gibi görünüyor",
+            "structured_output": {"durum": "usta_atandi", "hedef": "tamam", "kapi": "plan_hazir"},
+        })
+        once = json.loads(self.durum_yolu.read_text(encoding="utf-8"))
+        kosucu = SahteKosucu(yaniltici_hata)
+
+        sonuc = isi_ilerlet(
+            motor_uret(self.kart, kosucu),
+            is_id="IS-HATA-YANILTICI", durum_yolu=self.durum_yolu, isler_kok=self.isler_kok)
+
+        self.assertEqual(sonuc.izlenen_yol, HATA_YOL)
+        self.assertEqual(sonuc.bitis_durumu, "park")
+        self.assertNotIn("usta_atandi", sonuc.izlenen_yol)
+        self.assertNotIn("plan_hazir", sonuc.izlenen_yol)
+        self.assertEqual(
+            json.loads(self.durum_yolu.read_text(encoding="utf-8")),
+            dict(once, durum="park", is_id="IS-HATA-YANILTICI", son_sinyal=None))
+        self.assertFalse((self.isler_kok / "IS-HATA-YANILTICI").exists())
+
 
 if __name__ == "__main__":
     unittest.main()

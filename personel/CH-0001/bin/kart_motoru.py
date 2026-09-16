@@ -36,7 +36,7 @@ def motor_uret(kart_yolu, kosucu):
             return Sinyal.HATA, ""
         try:
             cozum = modul.cozumle(stdout)
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, AttributeError):
             return Sinyal.HATA, ""
         if not isinstance(cozum, dict) or cozum.get("hata"):
             metin = cozum.get("metin", "") if isinstance(cozum, dict) else ""

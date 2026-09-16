@@ -179,6 +179,30 @@ class KayitliMotorVeBozukKartTesti(unittest.TestCase):
         self.assertNotIn("olmayan-skill", komut)
         self.assertNotIn("baska-skill", komut)
 
+    def test_bos_liste_ve_json_dizi_attributeerror_kacmaz_hata_sinyali_doner(self):
+        # Debt 05 / Ticket 04: Sahte koşucu [] veya "[]" döndüğünde
+        # Claude/agy/codex cozumle'sinden AttributeError kaçmamalı; Sinyal.HATA dönmeli.
+        for cli in KAYITLI_CLILER:
+            for bozuk_cikti in ([], "[]"):
+                with self.subTest(cli=cli, cikti=bozuk_cikti):
+                    kosucu = SahteKosucu(bozuk_cikti)
+                    kart = kart_yaz(self.dizin / cli / f"dizi_{type(bozuk_cikti).__name__}",
+                                    cli=cli, model="deneme-model")
+                    motor = motor_uret(kart, kosucu)
+                    sinyal, _metin = motor("planlaniyor")
+                    self.assertEqual(sinyal, Sinyal.HATA)
+
+    def test_kosucu_oserror_hata_sinyali_doner(self):
+        class HataKosucu:
+            def __call__(self, komut):
+                raise OSError("cli bulunamadı")
+
+        kart = kart_yaz(self.dizin / "oserror", cli="claude", model="sonnet")
+        motor = motor_uret(kart, HataKosucu())
+        sinyal, metin = motor("planlaniyor")
+        self.assertEqual(sinyal, Sinyal.HATA)
+        self.assertEqual(metin, "")
+
 
 if __name__ == "__main__":
     unittest.main()

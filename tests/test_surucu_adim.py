@@ -275,6 +275,22 @@ class SurucuAdimTesti(unittest.TestCase):
                 self.assertEqual(surucu.adim("bos").yeni_durum, "is_alindi")
         self.assertEqual(self.iskelet, once)
 
+    def test_hata_sinyalinde_dolu_metin_olsa_bile_artefakt_yazilmaz_hata_durumu_doner(self):
+        # Ticket 04: Motor hata Sinyali verince metin dolu olsa bile artefakt yazılmaz;
+        # durum hata döner (plan_hazir / paket_hazir açılmaz).
+        for durum in ("planlaniyor", "delege_hazirlaniyor"):
+            with self.subTest(durum=durum):
+                with tempfile.TemporaryDirectory() as gecici:
+                    is_kok = Path(gecici)
+                    motor = SahteMotor(sinyal="hata", metin="hata detayı")
+                    sonuc = SurucuAdim(self.iskelet, motor, is_id="IS-HATA-ADIM",
+                                       is_kok=is_kok, sablon_kok=self.sablon_kok).adim(durum)
+                    self.assertTrue(sonuc.kabul)
+                    self.assertEqual(sonuc.yeni_durum, "hata")
+                    self.assertEqual(sonuc.sinyal, "hata")
+                    artefakt_yolu = is_kok / "IS-HATA-ADIM" / _ARTEFAKT_ADI[durum]
+                    self.assertFalse(artefakt_yolu.exists())
+
 
 if __name__ == "__main__":
     unittest.main()

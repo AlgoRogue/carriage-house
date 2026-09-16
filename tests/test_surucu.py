@@ -319,6 +319,89 @@ class SurucuHataVeRedTesti(unittest.TestCase):
                     self.assertEqual(sonuc.yeni_durum, mevcut)
                     self.assertEqual(self.yol.read_bytes(), once)
 
+    def test_motor_hata_sinyalinde_dolu_metin_olsa_bile_artefakt_yazilmaz_kapi_acilmaz(self):
+        # Ticket 04: Motor hata Sinyali verince metin dolu olsa bile İş artefaktı yazılmaz;
+        # plan_hazir kapısı açılmaz, planlaniyor -> hata -> park tek çağrıda işler.
+        once = self.depo.oku()
+        motor = SahteMotor(sinyal=HATA, metin="# Sahte Başarılı Plan İçeriği\n")
+
+        sonuc = isi_ilerlet(motor, is_id="IS-HATA-DOLU",
+                            durum_yolu=self.yol, isler_kok=self.isler_kok)
+
+        self.assertEqual(sonuc.izlenen_yol,
+                         ("bos", "is_alindi", "planlaniyor", "hata", "park"))
+        self.assertEqual(sonuc.bitis_durumu, "park")
+        self.assertNotIn("plan_hazir", sonuc.izlenen_yol)
+        self.assertEqual(self.depo.oku(),
+                         dict(once, durum="park", is_id="IS-HATA-DOLU", son_sinyal=None))
+        self.assertFalse((self.isler_kok / "IS-HATA-DOLU" / "plan.md").exists())
+
+    def test_motor_hata_sinyalinde_eski_artefakt_olsa_bile_plan_hazir_acilmaz_hatadan_parka_gider(self):
+        # Ticket 04: Önceden diskte eski dolu artefakt bulunsa dahi Motor hata Sinyali verince
+        # plan_hazir açılmaz; hata -> park yoluna sapılır.
+        once = self.depo.oku()
+        plan_yolu = self.isler_kok / "IS-HATA-ESKI" / "plan.md"
+        plan_yolu.parent.mkdir(parents=True)
+        plan_yolu.write_text("önceden kalma plan", encoding="utf-8")
+
+        motor = SahteMotor(sinyal=HATA, metin="hata açıklaması")
+
+        sonuc = isi_ilerlet(motor, is_id="IS-HATA-ESKI",
+                            durum_yolu=self.yol, isler_kok=self.isler_kok)
+
+        self.assertEqual(sonuc.izlenen_yol,
+                         ("bos", "is_alindi", "planlaniyor", "hata", "park"))
+        self.assertEqual(sonuc.bitis_durumu, "park")
+        self.assertNotIn("plan_hazir", sonuc.izlenen_yol)
+        self.assertEqual(self.depo.oku(),
+                         dict(once, durum="park", is_id="IS-HATA-ESKI", son_sinyal=None))
+
+    def test_delege_motor_hata_sinyalinde_dolu_metin_olsa_bile_paket_hazir_acilmaz(self):
+        # Ticket 04: delege adımında hata Sinyali verince paket_hazir açılmaz;
+        # delege_hazirlaniyor -> hata -> park işler.
+        once = self.depo.oku()
+        planlama = SahteMotor(metin="plan içeriği")
+        delege = SahteMotor(sinyal=HATA, metin="delege hatası")
+
+        def motor(girdi):
+            return (delege if "paket.md" in girdi else planlama)(girdi)
+
+        sonuc = isi_ilerlet(motor, is_id="IS-DELEGE-HATA",
+                            durum_yolu=self.yol, isler_kok=self.isler_kok)
+
+        self.assertEqual(sonuc.izlenen_yol, (
+            "bos", "is_alindi", "planlaniyor", "plan_hazir",
+            "delege_hazirlaniyor", "hata", "park"))
+        self.assertEqual(sonuc.bitis_durumu, "park")
+        self.assertNotIn("paket_hazir", sonuc.izlenen_yol)
+        self.assertEqual(self.depo.oku(),
+                         dict(once, durum="park", is_id="IS-DELEGE-HATA", son_sinyal=None))
+        # plan.md yazıldı (planlaniyor başarılıydı) ama paket.md yazılmadı
+        self.assertTrue((self.isler_kok / "IS-DELEGE-HATA" / "plan.md").exists())
+        self.assertFalse((self.isler_kok / "IS-DELEGE-HATA" / "paket.md").exists())
+
+    def test_sinyal_hata_ile_03_kapi_reddi_farki(self):
+        # Ticket 04 vs Ticket 03 ayrımı:
+        # 04: Sinyal 'hata' -> hata durumu -> park'a kadar gider (bitiş = park).
+        # 03: Sinyal 'basari' + kötü artefakt -> kapı reddi, döngü durur (bitiş = planlaniyor).
+        once = self.depo.oku()
+
+        # 04 yolu (hata sinyali):
+        sonuc_04 = isi_ilerlet(SahteMotor(sinyal=HATA, metin=""), is_id="IS-KARSILASTIRMA-04",
+                               durum_yolu=self.yol, isler_kok=self.isler_kok)
+        self.assertEqual(sonuc_04.bitis_durumu, "park")
+        self.assertEqual(sonuc_04.izlenen_yol,
+                         ("bos", "is_alindi", "planlaniyor", "hata", "park"))
+
+        # Sıfırla
+        self.depo.yaz(DurumKaydi(durum="bos", is_id=None, son_sinyal=None))
+
+        # 03 yolu (basari sinyali ama boş artefakt):
+        sonuc_03 = isi_ilerlet(SahteMotor(sinyal=BASARI, metin=""), is_id="IS-KARSILASTIRMA-03",
+                               durum_yolu=self.yol, isler_kok=self.isler_kok)
+        self.assertEqual(sonuc_03.bitis_durumu, "planlaniyor")
+        self.assertEqual(sonuc_03.izlenen_yol, ("bos", "is_alindi", "planlaniyor"))
+
 
 if __name__ == "__main__":
     unittest.main()
