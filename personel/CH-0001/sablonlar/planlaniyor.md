@@ -1,3 +1,3 @@
 İş {is_id} için plan hazırla.
 
-Planı şu yola yaz: {yaz_yolu}
+Cevabının gövdesi plan metninin kendisi olsun. Dosyayı sen yazma; Sürücü bu metni şu yola kaydedecek: {yaz_yolu}

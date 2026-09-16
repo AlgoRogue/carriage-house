@@ -19,6 +19,8 @@ def motor_uret(kart_yolu, kosucu):
     içerik kanalıdır; ``cozumle``'nin ``yapisal``/``maliyet``/``oturum``
     alanları sonraki durumu belirlemez.
     Bilinmeyen cli veya bozuk kart koşucudan önce ValueError yükseltir.
+    Motor'a yalnız salt okuma aracı (``Read``) verilir; yazma Sürücü'nündür.
+    Araç kısıtı olmayan cli'ler (agy, codex) bu alanı yok sayar.
     """
     kart = _kart_oku(kart_yolu)
     cli, model = _motor_alanlari(kart)
@@ -26,7 +28,7 @@ def motor_uret(kart_yolu, kosucu):
         modul = motorlar.motor_al(cli)
     except KeyError:
         raise ValueError(f"Bilinmeyen Motor cli: {cli}") from None
-    ayarlar = {"model": model}
+    ayarlar = {"model": model, "araclar": ["Read"]}
 
     def motor(girdi: str) -> tuple[Sinyal, str]:
         komut = modul.komut(str(girdi), ayarlar)

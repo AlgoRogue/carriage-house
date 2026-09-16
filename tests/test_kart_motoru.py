@@ -168,6 +168,16 @@ class KayitliMotorVeBozukKartTesti(unittest.TestCase):
                     motor_uret(kart, kosucu)
                 self.assertEqual(kosucu.cagrilar, [])
 
+    def test_claude_araclari_salt_okuma_ile_sinirli(self):
+        kosucu = SahteKosucu(CLAUDE_BASARI)
+        kart = kart_yaz(self.dizin, cli="claude", model="sonnet")
+        motor_uret(kart, kosucu)("planlaniyor")
+        komut = kosucu.cagrilar[0]
+        self.assertIn("--allowedTools", komut)
+        araclar = komut[komut.index("--allowedTools") + 1]
+        self.assertEqual(araclar, "Read")
+        self.assertNotIn("Write", araclar.split(","))
+
     def test_skill_listesi_komuta_etki_etmez(self):
         kosucu = SahteKosucu(CLAUDE_BASARI)
         kart = kart_yaz(self.dizin, cli="claude", model="sonnet",

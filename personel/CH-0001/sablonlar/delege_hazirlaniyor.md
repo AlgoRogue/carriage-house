@@ -1,4 +1,4 @@
 İş {is_id} için delege paketi hazırla.
 
-Planı şu yoldan oku: {oku_yolu}
-Paketi şu yola yaz: {yaz_yolu}
+Önceki plan Sürücü tarafından şu yola kaydedildi: {oku_yolu}
+Dosyayı okuyabilirsin ama yazma. Cevabının gövdesi delege paketinin kendisi olsun; Sürücü bu metni şu yola kaydedecek: {yaz_yolu}
