@@ -182,6 +182,92 @@ class SurucuHataVeRedTesti(unittest.TestCase):
         self.assertTrue((self.isler_kok / "IS-10" / "plan.md").exists())
         self.assertFalse((self.isler_kok / "IS-10" / "paket.md").exists())
 
+    def test_eski_dolu_artefakt_varken_bos_motor_ciktisi_reddedilir_planlaniyor_kalir(self):
+        # SP-1 regresyon testi: eski dolu plan + paket varken boş Motor çıktısı park'a götürmemeli.
+        once = self.depo.oku()
+        is_dizini = self.isler_kok / "IS-11"
+        is_dizini.mkdir(parents=True)
+        (is_dizini / "plan.md").write_text("eski plan", encoding="utf-8")
+        (is_dizini / "paket.md").write_text("eski paket", encoding="utf-8")
+
+        sonuc = isi_ilerlet(SahteMotor(metin=""), is_id="IS-11",
+                            durum_yolu=self.yol, isler_kok=self.isler_kok)
+
+        self.assertEqual(sonuc.izlenen_yol, ("bos", "is_alindi", "planlaniyor"))
+        self.assertEqual(sonuc.bitis_durumu, "planlaniyor")
+        self.assertEqual(self.depo.oku(),
+                         dict(once, durum="planlaniyor", is_id="IS-11", son_sinyal=None))
+
+    def test_eski_paket_varken_yeni_plan_ve_bos_delege_delege_durumunda_kalir(self):
+        # SP-1 regresyon testi: eski paket varken yeni plan geçerli ama boş delege çıktısı park'a değil delege_hazirlaniyor'da kalmalı.
+        once = self.depo.oku()
+        is_dizini = self.isler_kok / "IS-12"
+        is_dizini.mkdir(parents=True)
+        (is_dizini / "paket.md").write_text("eski paket", encoding="utf-8")
+
+        planlama = SahteMotor(metin="yeni plan içeriği")
+        delege = SahteMotor(metin="")
+
+        def motor(girdi):
+            return (delege if "paket.md" in girdi else planlama)(girdi)
+
+        sonuc = isi_ilerlet(motor, is_id="IS-12", durum_yolu=self.yol,
+                            isler_kok=self.isler_kok)
+
+        self.assertEqual(sonuc.izlenen_yol, (
+            "bos", "is_alindi", "planlaniyor", "plan_hazir", "delege_hazirlaniyor"))
+        self.assertEqual(sonuc.bitis_durumu, "delege_hazirlaniyor")
+        self.assertEqual(self.depo.oku(),
+                         dict(once, durum="delege_hazirlaniyor", is_id="IS-12", son_sinyal=None))
+
+    def test_eski_artefakt_varken_whitespace_motor_ciktisi_reddedilir(self):
+        # SP-1 regresyon testi: whitespace çıktı eski dosyayı başarıya çevirmemeli.
+        once = self.depo.oku()
+        is_dizini = self.isler_kok / "IS-13"
+        is_dizini.mkdir(parents=True)
+        (is_dizini / "plan.md").write_text("eski plan", encoding="utf-8")
+
+        sonuc = isi_ilerlet(SahteMotor(metin="   \n\t  "), is_id="IS-13",
+                            durum_yolu=self.yol, isler_kok=self.isler_kok)
+
+        self.assertEqual(sonuc.izlenen_yol, ("bos", "is_alindi", "planlaniyor"))
+        self.assertEqual(sonuc.bitis_durumu, "planlaniyor")
+        self.assertEqual(self.depo.oku(),
+                         dict(once, durum="planlaniyor", is_id="IS-13", son_sinyal=None))
+
+    def test_is_dizini_chmod_0_permission_error_seamden_kacmaz_reddedilir(self):
+        # SP-2 regresyon testi: chmod(0) iş dizininde PermissionError seam'den kaçmamalı.
+        once = self.depo.oku()
+
+        # Hem boş metin hem içerikli metin için PermissionError yakalanmalı
+        for is_id, metin in (("IS-14", ""), ("IS-14-B", "plan metni")):
+            with self.subTest(metin=metin):
+                shutil.copyfile(PERSONEL / "durum.json", self.yol)
+                is_dizini = self.isler_kok / is_id
+                is_dizini.mkdir(parents=True, exist_ok=True)
+                is_dizini.chmod(0)
+                try:
+                    sonuc = isi_ilerlet(SahteMotor(metin=metin), is_id=is_id,
+                                        durum_yolu=self.yol, isler_kok=self.isler_kok)
+                    self.assertEqual(sonuc.bitis_durumu, "planlaniyor")
+                    self.assertEqual(sonuc.izlenen_yol, ("bos", "is_alindi", "planlaniyor"))
+                    self.assertEqual(self.depo.oku(),
+                                     dict(once, durum="planlaniyor", is_id=is_id, son_sinyal=None))
+                finally:
+                    is_dizini.chmod(0o700)
+
+    def test_utf8_kodlama_hatasi_surrogate_seamden_kacmaz_reddedilir(self):
+        # SP-D1 regresyon testi: Motor "\ud800" döndürdüğünde UnicodeEncodeError kaçmamalı.
+        once = self.depo.oku()
+
+        sonuc = isi_ilerlet(SahteMotor(metin="\ud800"), is_id="IS-15",
+                            durum_yolu=self.yol, isler_kok=self.isler_kok)
+
+        self.assertEqual(sonuc.bitis_durumu, "planlaniyor")
+        self.assertEqual(sonuc.izlenen_yol, ("bos", "is_alindi", "planlaniyor"))
+        self.assertEqual(self.depo.oku(),
+                         dict(once, durum="planlaniyor", is_id="IS-15", son_sinyal=None))
+
     def test_tanimsiz_hedef_durum_dosyasini_degistirmez(self):
         self.depo.yaz(DurumKaydi(
             durum="bos", is_id="ESKI", son_sinyal="onceki"))

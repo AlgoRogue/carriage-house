@@ -118,6 +118,65 @@ class SurucuAdimTesti(unittest.TestCase):
             self.assertEqual(sonuc.yeni_durum, "planlaniyor")
             self.assertIn("İş artefaktı boş veya yazılamadı", sonuc.mesaj)
 
+    def test_eski_artefakt_varken_bos_metin_reddedilir_durum_korunur(self):
+        # SP-1: eski artefakt varken boş/whitespace Motor metni reddedilmeli
+        with tempfile.TemporaryDirectory() as gecici:
+            is_kok = Path(gecici)
+            plan_yolu = is_kok / "IS-03D" / "plan.md"
+            plan_yolu.parent.mkdir(parents=True)
+            plan_yolu.write_text("eski plan içeriği", encoding="utf-8")
+
+            motor = SahteMotor(metin="")
+            sonuc = SurucuAdim(self.iskelet, motor, is_id="IS-03D", is_kok=is_kok,
+                               sablon_kok=self.sablon_kok).adim("planlaniyor")
+
+            self.assertFalse(sonuc.kabul)
+            self.assertEqual(sonuc.yeni_durum, "planlaniyor")
+            self.assertIn("İş artefaktı boş veya yazılamadı", sonuc.mesaj)
+
+    def test_chmod_0_permission_error_reddedilir_durum_korunur(self):
+        # SP-2: chmod(0) olduğunda PermissionError fırlatılmamalı, red dönmeli
+        with tempfile.TemporaryDirectory() as gecici:
+            is_kok = Path(gecici)
+            is_dizini = is_kok / "IS-03E"
+            is_dizini.mkdir(parents=True)
+            is_dizini.chmod(0)
+            try:
+                for metin in ("", "   ", "plan içeriği"):
+                    with self.subTest(metin=metin):
+                        motor = SahteMotor(metin=metin)
+                        sonuc = SurucuAdim(self.iskelet, motor, is_id="IS-03E", is_kok=is_kok,
+                                           sablon_kok=self.sablon_kok).adim("planlaniyor")
+                        self.assertFalse(sonuc.kabul)
+                        self.assertEqual(sonuc.yeni_durum, "planlaniyor")
+                        self.assertIn("İş artefaktı boş veya yazılamadı", sonuc.mesaj)
+            finally:
+                is_dizini.chmod(0o700)
+
+    def test_surrogate_unicode_encode_error_reddedilir_durum_korunur(self):
+        # SP-D1: "\ud800" durumunda UnicodeEncodeError fırlatılmamalı, red dönmeli
+        with tempfile.TemporaryDirectory() as gecici:
+            is_kok = Path(gecici)
+            motor = SahteMotor(metin="\ud800")
+            sonuc = SurucuAdim(self.iskelet, motor, is_id="IS-03F", is_kok=is_kok,
+                               sablon_kok=self.sablon_kok).adim("planlaniyor")
+
+            self.assertFalse(sonuc.kabul)
+            self.assertEqual(sonuc.yeni_durum, "planlaniyor")
+            self.assertIn("İş artefaktı boş veya yazılamadı", sonuc.mesaj)
+
+    def test_gecersiz_utf8_bytes_reddedilir_durum_korunur(self):
+        # Geçersiz UTF-8 byte dizisi yazılmaya çalışıldığında UnicodeDecodeError yakalanıp reddedilmeli
+        with tempfile.TemporaryDirectory() as gecici:
+            is_kok = Path(gecici)
+            motor = SahteMotor(metin=b"\xff\xfe\x00\x00")
+            sonuc = SurucuAdim(self.iskelet, motor, is_id="IS-03G", is_kok=is_kok,
+                               sablon_kok=self.sablon_kok).adim("planlaniyor")
+
+            self.assertFalse(sonuc.kabul)
+            self.assertEqual(sonuc.yeni_durum, "planlaniyor")
+            self.assertIn("İş artefaktı boş veya yazılamadı", sonuc.mesaj)
+
     def test_motor_disinda_tek_adim_ve_sifir_cagri(self):
         with tempfile.TemporaryDirectory() as gecici:
             is_kok = Path(gecici)

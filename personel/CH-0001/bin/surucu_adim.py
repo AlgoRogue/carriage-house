@@ -65,31 +65,23 @@ class SurucuAdim:
         return sablon.format(
             is_id=self._is_id, yaz_yolu=self._artefakt_yolu(durum), oku_yolu=oku_yolu)
 
-    def _artefakt_yaz(self, durum: str, metin: str) -> bool:
-        yol = self._artefakt_yolu(durum)
-        if isinstance(metin, str) and metin.strip():
-            try:
-                yol.parent.mkdir(parents=True, exist_ok=True)
-                yol.write_text(metin, encoding="utf-8")
-            except OSError:
-                return False
-        elif isinstance(metin, bytes) and metin.strip():
-            try:
-                yol.parent.mkdir(parents=True, exist_ok=True)
-                yol.write_bytes(metin)
-            except OSError:
-                return False
-        elif yol.exists():
-            pass
-        else:
+    def _artefakt_yaz(self, durum: str, metin: str | bytes) -> bool:
+        if not isinstance(metin, (str, bytes)) or not metin.strip():
             return False
 
+        yol = self._artefakt_yolu(durum)
         try:
+            yol.parent.mkdir(parents=True, exist_ok=True)
+            if isinstance(metin, bytes):
+                yol.write_bytes(metin)
+            else:
+                yol.write_text(metin, encoding="utf-8")
+
             if not yol.is_file():
                 return False
             icerik = yol.read_text(encoding="utf-8")
             if not icerik.strip():
                 return False
-        except (OSError, UnicodeDecodeError):
+        except (OSError, UnicodeError):
             return False
         return True
