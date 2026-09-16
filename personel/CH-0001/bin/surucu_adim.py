@@ -16,11 +16,12 @@ class SurucuAdim:
     girdi Sürücü'nün durum adına göre seçip doldurduğu Prompt şablonudur
     (yalnız yol/adres slotları; kimlik, skill, hafıza, Defter yok).
     ``metin`` içerik kanalıdır; ``basari`` sinyalinde İş artefaktı yoluna
-    yazılır. Artefakt boş/yazılamazsa geçiş reddedilir, durum Motor
-    durumunda kalır (otomatik ``hata`` durumu açılmaz). Motor dışında
-    etkin dilimdeki tek hata-dışı kenar, yoksa tek kenar seçilir. Kenar
-    yoksa (ilk dilimde park gibi) veya seçim belirsizse durum korunarak
-    red döner. Her çağrı en fazla bir geçiş uygular.
+    yazılır. Artefakt boş/yazılamazsa (veya dosya yoksa, UTF-8 okunamıyorsa,
+    IO hatası alınırsa) geçiş reddedilir, durum Motor durumunda kalır
+    (otomatik ``hata`` durumu açılmaz). Motor dışında etkin dilimdeki tek
+    hata-dışı kenar, yoksa tek kenar seçilir. Kenar yoksa (ilk dilimde park
+    gibi) veya seçim belirsizse durum korunarak red döner. Her çağrı en
+    fazla bir geçiş uygular.
     """
 
     def __init__(self, iskelet, motor, *, is_id=None, is_kok=None,
@@ -65,9 +66,30 @@ class SurucuAdim:
             is_id=self._is_id, yaz_yolu=self._artefakt_yolu(durum), oku_yolu=oku_yolu)
 
     def _artefakt_yaz(self, durum: str, metin: str) -> bool:
-        if not isinstance(metin, str) or not metin.strip():
-            return False
         yol = self._artefakt_yolu(durum)
-        yol.parent.mkdir(parents=True, exist_ok=True)
-        yol.write_text(metin, encoding="utf-8")
+        if isinstance(metin, str) and metin.strip():
+            try:
+                yol.parent.mkdir(parents=True, exist_ok=True)
+                yol.write_text(metin, encoding="utf-8")
+            except OSError:
+                return False
+        elif isinstance(metin, bytes) and metin.strip():
+            try:
+                yol.parent.mkdir(parents=True, exist_ok=True)
+                yol.write_bytes(metin)
+            except OSError:
+                return False
+        elif yol.exists():
+            pass
+        else:
+            return False
+
+        try:
+            if not yol.is_file():
+                return False
+            icerik = yol.read_text(encoding="utf-8")
+            if not icerik.strip():
+                return False
+        except (OSError, UnicodeDecodeError):
+            return False
         return True

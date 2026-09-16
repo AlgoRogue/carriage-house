@@ -89,6 +89,35 @@ class SurucuAdimTesti(unittest.TestCase):
             self.assertEqual(sonuc.yeni_durum, "planlaniyor")
             self.assertFalse((is_kok / "IS-03" / "plan.md").exists())
 
+    def test_basari_io_hatasinda_reddedilir_durum_korunur(self):
+        with tempfile.TemporaryDirectory() as gecici:
+            # is_kok dizin değil dosya yapılır (NotADirectoryError).
+            is_dosya = Path(gecici) / "isler_dosyasi"
+            is_dosya.write_text("dosya", encoding="utf-8")
+            motor = SahteMotor(metin="plan içeriği")
+
+            sonuc = SurucuAdim(self.iskelet, motor, is_id="IS-03B", is_kok=is_dosya,
+                               sablon_kok=self.sablon_kok).adim("planlaniyor")
+
+            self.assertFalse(sonuc.kabul)
+            self.assertEqual(sonuc.yeni_durum, "planlaniyor")
+            self.assertIn("İş artefaktı boş veya yazılamadı", sonuc.mesaj)
+
+    def test_basari_utf8_okunamayan_artefaktta_reddedilir_durum_korunur(self):
+        with tempfile.TemporaryDirectory() as gecici:
+            is_kok = Path(gecici)
+            plan_yolu = is_kok / "IS-03C" / "plan.md"
+            plan_yolu.parent.mkdir(parents=True)
+            plan_yolu.write_bytes(b"\xff\xfe\x00\x00")
+            motor = SahteMotor(metin="")
+
+            sonuc = SurucuAdim(self.iskelet, motor, is_id="IS-03C", is_kok=is_kok,
+                               sablon_kok=self.sablon_kok).adim("planlaniyor")
+
+            self.assertFalse(sonuc.kabul)
+            self.assertEqual(sonuc.yeni_durum, "planlaniyor")
+            self.assertIn("İş artefaktı boş veya yazılamadı", sonuc.mesaj)
+
     def test_motor_disinda_tek_adim_ve_sifir_cagri(self):
         with tempfile.TemporaryDirectory() as gecici:
             is_kok = Path(gecici)
