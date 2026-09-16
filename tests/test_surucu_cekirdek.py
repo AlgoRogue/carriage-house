@@ -50,7 +50,7 @@ class SurucuTesti(unittest.TestCase):
         for mevcut, hedef in [("park", "usta_atandi"), ("usta_atandi", "izleniyor"),
                               ("izleniyor", "tamam")]:
             with self.subTest(hedef=hedef):
-                sonuc = Surucu(aksiyon_iskeleti()).gecis(mevcut, hedef, "motor_ciktisi")
+                sonuc = Surucu(aksiyon_iskeleti()).gecis(mevcut, hedef, "basari")
                 self.assertFalse(sonuc.kabul)
                 self.assertEqual(sonuc.yeni_durum, mevcut)
                 self.assertIn("dilim", sonuc.mesaj)
@@ -71,10 +71,10 @@ class SurucuTesti(unittest.TestCase):
 
     def test_motor_gecisi_hedefle_uyumlu_sinyal_gerektirir(self):
         surucu = Surucu(aksiyon_iskeleti())
-        for mevcut, basari in [("planlaniyor", "plan_hazir"),
-                               ("delege_hazirlaniyor", "paket_hazir")]:
-            for hedef, dogru_sinyal in [(basari, "motor_ciktisi"), ("hata", "motor_hatasi")]:
-                for sinyal in [None, "motor_ciktisi", "motor_hatasi"]:
+        for mevcut, basari_hedef in [("planlaniyor", "plan_hazir"),
+                                     ("delege_hazirlaniyor", "paket_hazir")]:
+            for hedef, dogru_sinyal in [(basari_hedef, "basari"), ("hata", "hata")]:
+                for sinyal in [None, "basari", "hata"]:
                     with self.subTest(mevcut=mevcut, hedef=hedef, sinyal=sinyal):
                         sonuc = surucu.gecis(mevcut, hedef, sinyal)
                         kabul = sinyal == dogru_sinyal
@@ -86,7 +86,7 @@ class SurucuTesti(unittest.TestCase):
         surucu = Surucu(aksiyon_iskeleti())
         for mevcut, hedef in [("bos", "is_alindi"), ("hata", "park"),
                               ("paket_hazir", "park")]:
-            for sinyal in ["motor_ciktisi", "motor_hatasi"]:
+            for sinyal in ["basari", "hata"]:
                 with self.subTest(mevcut=mevcut, sinyal=sinyal):
                     sonuc = surucu.gecis(mevcut, hedef, sinyal)
                     self.assertFalse(sonuc.kabul)
@@ -101,7 +101,7 @@ class SurucuTesti(unittest.TestCase):
         }
         surucu = Surucu(iskelet, {"ozel_motor", "ozel_cikti", "hata"})
         self.assertEqual(surucu.motor_basari_hedefi("ozel_motor"), "ozel_cikti")
-        sonuc = surucu.gecis("ozel_motor", "ozel_cikti", "motor_ciktisi")
+        sonuc = surucu.gecis("ozel_motor", "ozel_cikti", "basari")
         self.assertTrue(sonuc.kabul)
         self.assertEqual(sonuc.yeni_durum, "ozel_cikti")
         self.assertFalse(surucu.gecis("ozel_motor", "ozel_cikti").kabul)
@@ -124,10 +124,10 @@ class SurucuTesti(unittest.TestCase):
             surucu = Surucu(iskelet)
             self.assertIsNone(surucu.motor_basari_hedefi("planlaniyor"))
             for hedef in hedefler:
-                sonuc = surucu.gecis("planlaniyor", hedef, "motor_ciktisi")
+                sonuc = surucu.gecis("planlaniyor", hedef, "basari")
                 self.assertFalse(sonuc.kabul)
                 self.assertEqual(sonuc.yeni_durum, "planlaniyor")
-            self.assertTrue(surucu.gecis("planlaniyor", "hata", "motor_hatasi").kabul)
+            self.assertTrue(surucu.gecis("planlaniyor", "hata", "hata").kabul)
 
 
 if __name__ == "__main__":

@@ -5,10 +5,12 @@ from surucu_cekirdek import GecisSonucu, ILK_DILIM, Sinyal, Surucu
 class SurucuAdim:
     """``adim(mevcut_durum)`` bir GecisSonucu döndürür; durum çağıranda kalır.
 
-    Motor, mevcut durum adını alan ve sinyal döndüren bir callable'dır.
-    Motor dışında etkin dilimdeki tek hata-dışı kenar, yoksa tek kenar
-    seçilir. Kenar yoksa (ilk dilimde park gibi) veya seçim belirsizse
-    durum korunarak red döner. Her çağrı en fazla bir geçiş uygular.
+    Motor, girdi alan ve ``(Sinyal, metin)`` döndüren bir callable'dır; bu
+    dilimde girdi geçici olarak durum adıdır. ``metin`` içerik kanalıdır,
+    henüz artefakt olarak yazılmaz. Motor dışında etkin dilimdeki tek
+    hata-dışı kenar, yoksa tek kenar seçilir. Kenar yoksa (ilk dilimde
+    park gibi) veya seçim belirsizse durum korunarak red döner. Her çağrı
+    en fazla bir geçiş uygular.
     """
 
     def __init__(self, iskelet, motor, dilim=ILK_DILIM):
@@ -18,8 +20,8 @@ class SurucuAdim:
 
     def adim(self, mevcut_durum: str) -> GecisSonucu:
         if mevcut_durum in self._surucu.motor_durumlari:
-            sinyal = self._motor(mevcut_durum)
-            hedef = ("hata" if sinyal == Sinyal.MOTOR_HATASI
+            sinyal, _metin = self._motor(mevcut_durum)
+            hedef = ("hata" if sinyal == Sinyal.HATA
                      else self._surucu.motor_basari_hedefi(mevcut_durum))
             if hedef is None:
                 return GecisSonucu(False, mevcut_durum, "Motor başarı hedefi yok veya belirsiz.")

@@ -39,13 +39,13 @@ class SurucuDurumTesti(unittest.TestCase):
     def test_durum_kaydi_disk_formatini_degistirmeden_doner(self):
         once = json.loads(self.yol.read_text(encoding="utf-8"))
         kayit = DurumKaydi(
-            durum="planlaniyor", is_id="IS-08", son_sinyal="motor_ciktisi")
+            durum="planlaniyor", is_id="IS-08", son_sinyal="basari")
         self.depo.yaz(kayit)
         belge = json.loads(self.yol.read_text(encoding="utf-8"))
         self.assertEqual(
             belge,
             dict(once, durum="planlaniyor", is_id="IS-08",
-                 son_sinyal="motor_ciktisi"))
+                 son_sinyal="basari"))
         okunan = self.depo.oku()
         self.assertEqual(okunan, belge)
         self.assertEqual(
@@ -67,11 +67,11 @@ class SurucuDurumTesti(unittest.TestCase):
         sonuc = kalici_gecis(
             self.depo, self.surucu,
             kayit=DurumKaydi(durum="plan_hazir", is_id="YENI",
-                             son_sinyal="motor_ciktisi"))
+                             son_sinyal="basari"))
         self.assertTrue(sonuc.kabul)
         kayit = self.depo.oku()
         self.assertEqual((kayit["durum"], kayit["is_id"], kayit["son_sinyal"]),
-                         ("plan_hazir", "YENI", "motor_ciktisi"))
+                         ("plan_hazir", "YENI", "basari"))
         kalici_gecis(
             self.depo, self.surucu,
             kayit=DurumKaydi(durum="delege_hazirlaniyor", is_id=None))
@@ -80,8 +80,8 @@ class SurucuDurumTesti(unittest.TestCase):
         self.assertIsNone(self.depo.oku()["is_id"])
 
     def test_sinyal_enum_durum_jsona_onceki_dizgi_olarak_yazilir(self):
-        for uye, dizgi in ((Sinyal.MOTOR_CIKTISI, "motor_ciktisi"),
-                           (Sinyal.MOTOR_HATASI, "motor_hatasi")):
+        for uye, dizgi in ((Sinyal.BASARI, "basari"),
+                           (Sinyal.HATA, "hata")):
             with self.subTest(dizgi=dizgi):
                 self.assertEqual(uye, dizgi)
                 self.depo.yaz(DurumKaydi(

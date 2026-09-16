@@ -8,7 +8,7 @@ from pathlib import Path
 from tests.surucu_yolu import PERSONEL
 from durum_deposu import DurumDeposu, DurumKaydi
 from sahte_motor import SahteMotor
-from surucu_cekirdek import MOTOR_CIKTISI, MOTOR_HATASI, Surucu
+from surucu_cekirdek import BASARI, HATA, Surucu
 from surucu_kalici_gecis import kalici_gecis
 from surucu import isi_ilerlet
 
@@ -48,7 +48,7 @@ class SurucuHataVeRedTesti(unittest.TestCase):
     def test_planlama_hatasi_tek_cagrida_hatadan_parka_kaydeder(self):
         once = self.depo.oku()
 
-        sonuc = isi_ilerlet(SahteMotor(MOTOR_HATASI),
+        sonuc = isi_ilerlet(SahteMotor(HATA),
                             is_id="IS-05", durum_yolu=self.yol)
 
         self.assertEqual(sonuc.izlenen_yol,
@@ -60,7 +60,7 @@ class SurucuHataVeRedTesti(unittest.TestCase):
     def test_delege_hatasi_tek_cagrida_hatadan_parka_kaydeder(self):
         once = self.depo.oku()
         planlama = SahteMotor()
-        delege = SahteMotor(MOTOR_HATASI)
+        delege = SahteMotor(HATA)
 
         def motor(durum):
             return (delege if durum == "delege_hazirlaniyor" else planlama)(durum)
@@ -108,17 +108,18 @@ class SurucuHataVeRedTesti(unittest.TestCase):
         for mevcut, hedef in (("bos", "is_alindi"),
                                ("paket_hazir", "park"),
                                ("park", "usta_atandi")):
-            for sinyal in (MOTOR_CIKTISI, MOTOR_HATASI):
+            for sinyal in (BASARI, HATA):
                 with self.subTest(mevcut=mevcut, sinyal=sinyal):
                     self.depo.yaz(DurumKaydi(
                         durum=mevcut, is_id="ESKI", son_sinyal="onceki"))
                     once = self.yol.read_bytes()
 
+                    sinyal_uretilen, _metin = SahteMotor(sinyal)(mevcut)
                     sonuc = kalici_gecis(
                         self.depo, self.surucu,
                         kayit=DurumKaydi(
                             durum=hedef, is_id="IS-05",
-                            son_sinyal=SahteMotor(sinyal)(mevcut)))
+                            son_sinyal=sinyal_uretilen))
 
                     self.assertFalse(sonuc.kabul)
                     self.assertEqual(sonuc.yeni_durum, mevcut)

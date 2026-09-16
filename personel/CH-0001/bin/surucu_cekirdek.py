@@ -4,12 +4,12 @@ from enum import StrEnum
 
 
 class Sinyal(StrEnum):
-    MOTOR_CIKTISI = "motor_ciktisi"
-    MOTOR_HATASI = "motor_hatasi"
+    BASARI = "basari"
+    HATA = "hata"
 
 
-MOTOR_CIKTISI = Sinyal.MOTOR_CIKTISI
-MOTOR_HATASI = Sinyal.MOTOR_HATASI
+BASARI = Sinyal.BASARI
+HATA = Sinyal.HATA
 
 
 ILK_DILIM = frozenset({
@@ -69,10 +69,12 @@ class Surucu:
               sinyal: Sinyal | None = None) -> GecisSonucu:
         """İskelet → dilim → sinyal sırasıyla tek geçişi doğrular.
 
-        ``motor_ciktisi`` iskeletteki tek başarı hedefine, ``motor_hatasi``
-        hata hedefine izin verir. Motor dışında sinyal yalnız None olabilir.
-        Üye olmayan sinyal ValueError yükseltir. Red sonucunda yeni_durum
-        mevcut_durum olarak kalır; kayıt yazılmaz.
+        ``basari`` iskeletteki tek başarı hedefine, ``hata`` durum adı
+        ``hata``'ya izin verir (Sinyal ``hata`` ile durum adı ``hata`` ayrı
+        kavramlardır, ikisi yalnız aynı dizgiyi paylaşır). Motor dışında
+        sinyal yalnız None olabilir. Üye olmayan sinyal ValueError
+        yükseltir. Red sonucunda yeni_durum mevcut_durum olarak kalır;
+        kayıt yazılmaz.
         """
         if (mevcut_durum, hedef_durum) not in self._gecisler:
             return GecisSonucu(False, mevcut_durum, "Geçiş aksiyon iskeletinde tanımlı değil.")
@@ -83,13 +85,13 @@ class Surucu:
                 sinyal = Sinyal(sinyal)
             except ValueError:
                 raise ValueError(
-                    "Sinyal motor_ciktisi veya motor_hatasi olmalı."
+                    "Sinyal basari veya hata olmalı."
                 ) from None
         if mevcut_durum in self._motor_durumlari:
             uygun = (
-                sinyal == Sinyal.MOTOR_CIKTISI
+                sinyal == Sinyal.BASARI
                 and self.motor_basari_hedefi(mevcut_durum) == hedef_durum
-            ) or (sinyal == Sinyal.MOTOR_HATASI and hedef_durum == "hata")
+            ) or (sinyal == Sinyal.HATA and hedef_durum == "hata")
             if not uygun:
                 return GecisSonucu(False, mevcut_durum, "Motor sinyali eksik veya hedefle uyumsuz.")
         elif sinyal is not None:

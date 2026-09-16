@@ -19,10 +19,10 @@ class SurucuAdimTesti(unittest.TestCase):
     def test_motor_durumlari_bir_kez_cagrilir_ve_sinyal_cekirdege_gider(self):
         for durum, hedef in [("planlaniyor", "plan_hazir"),
                              ("delege_hazirlaniyor", "paket_hazir")]:
-            for sinyal in ("motor_ciktisi", "motor_hatasi"):
+            for sinyal in ("basari", "hata"):
                 with self.subTest(durum=durum, sinyal=sinyal):
                     motor = SahteMotor(sinyal)
-                    hedef_durum = "hata" if sinyal == "motor_hatasi" else hedef
+                    hedef_durum = "hata" if sinyal == "hata" else hedef
                     cekirdek = Surucu(self.iskelet)
                     with patch.object(Surucu, "gecis", wraps=cekirdek.gecis) as gecis:
                         sonuc = SurucuAdim(self.iskelet, motor).adim(durum)
@@ -45,9 +45,10 @@ class SurucuAdimTesti(unittest.TestCase):
 
     def test_sahte_motor_cagri_sirasini_ve_zamanini_kaydeder(self):
         saat = Mock(side_effect=[10.0, 12.5])
-        motor = SahteMotor("motor_hatasi", saat=saat)
+        motor = SahteMotor("hata", saat=saat)
         for durum in ("planlaniyor", "delege_hazirlaniyor"):
-            self.assertEqual(motor(durum), "motor_hatasi")
+            sinyal, _metin = motor(durum)
+            self.assertEqual(sinyal, "hata")
         self.assertEqual(motor.cagrilar, [
             {"durum": "planlaniyor", "zaman": 10.0},
             {"durum": "delege_hazirlaniyor", "zaman": 12.5}])
@@ -57,7 +58,7 @@ class SurucuAdimTesti(unittest.TestCase):
         for gecis in self.iskelet["gecisler"]:
             if gecis["from"] == "planlaniyor" and gecis["to"] == "plan_hazir":
                 gecis["to"] = "paket_hazir"
-        motor = Mock(return_value="motor_ciktisi")
+        motor = Mock(return_value=("basari", ""))
         sonuc = SurucuAdim(self.iskelet, motor).adim("planlaniyor")
         self.assertEqual(sonuc.yeni_durum, "paket_hazir")
         self.assertTrue(sonuc.kabul)
@@ -77,7 +78,7 @@ class SurucuAdimTesti(unittest.TestCase):
 
     def test_gecersiz_sinyal_hedef_olarak_kullanilmaz(self):
         with self.assertRaises(ValueError):
-            SurucuAdim(self.iskelet, lambda durum: "park").adim("planlaniyor")
+            SurucuAdim(self.iskelet, lambda durum: ("park", "")).adim("planlaniyor")
 
     def test_belirsiz_motor_hedefi_ve_dilim_disi_hedef_reddedilir(self):
         self.iskelet["gecisler"].append({"from": "planlaniyor", "to": "park"})

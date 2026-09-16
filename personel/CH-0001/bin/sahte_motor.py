@@ -5,22 +5,24 @@ from surucu_cekirdek import Sinyal
 
 
 class SahteMotor:
-    """``motor(durum)`` sözleşmesi; çağrılar zaman sırasıyla kaydedilir.
+    """``motor(girdi) -> (Sinyal, metin)`` sözleşmesi; çağrılar zaman sırasıyla kaydedilir.
 
     ``saat`` saniye döndüren bir callable'dır; varsayılan monoton saattir.
-    Testler sabit bir saat enjekte edebilir. Hiçbir kayıt dosyaya yazılmaz.
+    Testler sabit bir saat enjekte edebilir. ``metin`` içerik kanalıdır,
+    Sinyal değildir. Hiçbir kayıt dosyaya yazılmaz.
     """
 
-    def __init__(self, sinyal: Sinyal = Sinyal.MOTOR_CIKTISI, *, saat=monotonic):
+    def __init__(self, sinyal: Sinyal = Sinyal.BASARI, *, metin: str = "", saat=monotonic):
         try:
             self.sinyal = Sinyal(sinyal)
         except ValueError:
             raise ValueError(
-                "Sahte Motor sinyali motor_ciktisi veya motor_hatasi olmalı."
+                "Sahte Motor sinyali basari veya hata olmalı."
             ) from None
+        self.metin = metin
         self.saat = saat
         self.cagrilar = []
 
-    def __call__(self, durum: str) -> Sinyal:
-        self.cagrilar.append({"durum": durum, "zaman": self.saat()})
-        return self.sinyal
+    def __call__(self, girdi: str) -> tuple[Sinyal, str]:
+        self.cagrilar.append({"durum": girdi, "zaman": self.saat()})
+        return self.sinyal, self.metin
